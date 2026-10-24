@@ -137,9 +137,15 @@ def build(lock: dict, cache: Path) -> tuple[list[dict], dict]:
                 identifier = row.get("id", f"{source['key']}-{index + 1:04}")
                 try:
                     if source["key"] in {"kumitaku", "yomitaku"}:
+                        invalid_questions = []
                         candidates = normalize_js_group(
-                            row, file.get("level", "N1"), file["question_type"], source["key"]
+                            row,
+                            file.get("level", "N1"),
+                            file["question_type"],
+                            source["key"],
+                            rejected=invalid_questions,
                         )
+                        rejected.extend(dict(file=path, **item) for item in invalid_questions)
                     elif source["key"].startswith("success"):
                         candidates = normalize_success(row, file["level"], file["category"])
                     elif file.get("question_type", "").startswith("vocab_") or file.get("question_type") in {
@@ -207,6 +213,7 @@ def build(lock: dict, cache: Path) -> tuple[list[dict], dict]:
             "自动校验仅检查结构、重复及可核对的完整句，不等于人工语言审核。",
             "AI 练习题不是 JLPT 真题，等级和解析可能存在偏差。",
             "排序题须通过完整句重建校验；缺少详细解析的题目明确标注，不生成解析冒充原文。",
+            "完整句重建只核对星号位置与来源答案是否一致，不能证明其他语序在语言上不成立。",
         ],
     )
     return result, report

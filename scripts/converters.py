@@ -32,6 +32,36 @@ def explanations(row):
     return row.get("explanation") or "原题来源仅提供答案，暂无详细解析。"
 
 
+def validate_order(sentence, options, answer, completed, *, prefix_star=False):
+    # Kumitaku uses ＿＿＊＿＿ for two slots, while drill uses ＿★＿ for one.
+    pattern = r"[★＊][＿_]+|[＿_]+" if prefix_star else r"[＿_]*[★＊][＿_]*|＿{2,}|_{2,}"
+    blanks = list(re.finditer(pattern, sentence))
+    stars = [i for i, match in enumerate(blanks) if "★" in match[0] or "＊" in match[0]]
+    if len(options) != 4 or len(blanks) != 4 or len(stars) != 1 or not completed:
+        raise ValueError("incomplete_order_question")
+
+    def sentence_key(text):
+        # Kumitaku quotes may add commas and omit the final period.
+        if prefix_star:
+            return re.sub(r"[、,]", "", compact(text)).rstrip("。.")
+        return compact(text)
+
+    candidates = set()
+    for order in itertools.permutations(range(4)):
+        parts, pos = [], 0
+        for index, (match, choice) in enumerate(zip(blanks, order)):
+            gap = sentence[pos : match.start()]
+            if prefix_star and index and re.fullmatch(r"[・\s]*", gap):
+                gap = ""
+            parts.extend([gap, options[choice]])
+            pos = match.end()
+        parts.append(sentence[pos:])
+        if sentence_key("".join(parts)) == sentence_key(completed):
+            candidates.add(order[stars[0]])
+    if candidates != {answer}:
+        raise ValueError("order_reconstruction_mismatch")
+
+
 def normalize_extra_drill(row, level, kind):
     if row.get("verified") is False:
         raise ValueError("upstream_rejected")
@@ -44,29 +74,24 @@ def normalize_extra_drill(row, level, kind):
         explanation=explanations(row),
     )
     if kind.startswith("vocab_"):
-        prompt = row.get("sentence") or row.get("question") or f"请选择「{row.get('target', '')}」用法正确的一句。"
-        if row.get("target") and row["target"] not in prompt:
+        target = row.get("target", "")
+        prompt = row.get("sentence") or row.get("question")
+        if not prompt:
+            if kind != "vocab_usage" or not target:
+                raise ValueError("missing_vocabulary_prompt")
+            prompt = f"请选择「{target}」用法正确的一句。"
+        if kind == "vocab_context" and target and re.match(r"^意味\s*[:：]", row.get("explanation", "")):
+            raise ValueError("definition_template_not_context")
+        if kind == "vocab_synonym" and target and any(compact(option) == compact(target) for option in base["options"]):
+            raise ValueError("synonym_repeats_target")
+        # The written target is the answer in kanji/context questions, not a hint.
+        if kind in {"vocab_reading", "vocab_synonym", "vocab_usage"} and target and target not in prompt:
             prompt += f"\n目标词：{row['target']}"
         base.update(category="vocabulary", prompt=prompt)
         return [base]
     if kind == "grammar_order":
-        options = row.get("options", [])
         sentence, completed = row.get("sentence", ""), row.get("complete_sentence", "")
-        blanks = list(re.finditer(r"[＿_]*[★＊][＿_]*|＿{2,}|_{2,}", sentence))
-        star = next((i for i, m in enumerate(blanks) if "★" in m[0] or "＊" in m[0]), None)
-        if len(options) != 4 or len(blanks) != 4 or star is None or not completed:
-            raise ValueError("incomplete_order_question")
-        candidates = []
-        for order in itertools.permutations(range(4)):
-            parts, pos = [], 0
-            for match, choice in zip(blanks, order):
-                parts.extend([sentence[pos : match.start()], options[choice]])
-                pos = match.end()
-            parts.append(sentence[pos:])
-            if compact("".join(parts)) == compact(completed):
-                candidates.append(order[star])
-        if not candidates or set(candidates) != {row.get("answer")}:
-            raise ValueError("order_reconstruction_mismatch")
+        validate_order(sentence, base["options"], base["answer"], completed)
         base.update(
             category="grammar",
             prompt=sentence + "\n请选择 ★ 位置的片段。",
@@ -97,9 +122,30 @@ def normalize_extra_drill(row, level, kind):
     raise ValueError("unsupported_source_type")
 
 
-def normalize_js_group(group, level, kind, prefix):
+def normalize_js_group(group, level, kind, prefix, *, rejected=None):
     result = []
     for index, row in enumerate(group.get("questions", []), 1):
+        identifier = f"{prefix}-{group['id']}-{index}"
+        prompt = row.get("q", "")
+        explanation = explanations(row)
+        if kind == "grammar_order":
+            try:
+                answer = row.get("answer")
+                values = row.get("explain", [])
+                if type(answer) is not int or not 0 <= answer < len(values):
+                    raise ValueError("missing_order_complete_sentence")
+                quoted = re.match(r"^正解[。．.:：\s]*「([^」]+)」", values[answer])
+                if not quoted:
+                    raise ValueError("missing_order_complete_sentence")
+                completed = quoted[1]
+                validate_order(prompt, row.get("options", []), answer, completed, prefix_star=True)
+                prompt = prompt.replace("＊", "★") + "\n请选择 ★ 位置的片段。"
+                explanation += "\n完整句：" + completed
+            except (ValueError, TypeError) as exc:
+                if rejected is None:
+                    raise
+                rejected.append(dict(id=identifier, reason=str(exc)))
+                continue
         passage = group.get("passage", "")
         if not passage and group.get("passageA") and group.get("passageB"):
             passage = "【文章 A】\n" + group["passageA"] + "\n\n【文章 B】\n" + group["passageB"]
@@ -109,15 +155,15 @@ def normalize_js_group(group, level, kind, prefix):
             passage = "\n\n".join(f"{k}\n{v}" for k, v in passage.items())
         result.append(
             dict(
-                id=f"{prefix}-{group['id']}-{index}",
+                id=identifier,
                 level=level,
                 category="reading" if kind.startswith("reading_") else "grammar",
                 question_type=kind,
-                prompt=row.get("q", ""),
+                prompt=prompt,
                 passage=passage,
                 options=row.get("options", []),
                 answer=row.get("answer"),
-                explanation=explanations(row),
+                explanation=explanation,
             )
         )
     return result
