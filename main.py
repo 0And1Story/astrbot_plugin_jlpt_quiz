@@ -339,7 +339,9 @@ class JLPTQuizPlugin(Star):
             text += "\n\n听力原文：\n" + question.transcript
         if self.config.get("show_source", True) and question.source:
             text += "\n\n来源：" + question.source
-            if question.ai_generated:
+            if question.provenance:
+                text += "（" + question.provenance + "）"
+            elif question.ai_generated:
                 text += "（AI／辅助生成练习题）"
         if question.credit:
             text += "\n\n" + question.credit

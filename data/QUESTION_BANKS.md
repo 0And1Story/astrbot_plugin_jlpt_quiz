@@ -42,5 +42,6 @@ python scripts/import_success_audio.py
 - 阅读需提供 `passage` 或 `passage_images`；听力需提供 `audio`。`transcript`、`translation` 在结算后显示。
 - `images`／`passage_images` 为图片路径数组；本地媒体路径相对于 JSONL，必须位于题库目录内。媒体也可使用 HTTP(S) URL。
 - 图片题或音频内含选项编号时，设 `shuffle_options: false`，避免编号错位。
+- 可用 `provenance` 说明生成与审核方式；`ai_generated: true` 表示已确认由 AI 生成，未标记不代表已确认人工编写。
 
 仅添加自己有权使用的材料，并保留对应作者、来源与使用条件。

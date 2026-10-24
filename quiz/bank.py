@@ -41,6 +41,7 @@ class Question:
     source: str = ""
     source_url: str = ""
     ai_generated: bool = False
+    provenance: str = ""
     original_options: tuple[str, ...] = ()
     question_type: str = ""
     images: tuple[str, ...] = ()
@@ -76,7 +77,17 @@ class Question:
         answer = row.get("answer")
         if type(answer) is not int or not 0 <= answer < len(options):
             raise ValueError("answer 必须为选项范围内的整数（从 0 开始）")
-        for name in ("passage", "audio", "transcript", "translation", "source", "source_url", "credit", "license"):
+        for name in (
+            "passage",
+            "audio",
+            "transcript",
+            "translation",
+            "source",
+            "source_url",
+            "credit",
+            "license",
+            "provenance",
+        ):
             if name in row and not isinstance(row[name], str):
                 raise ValueError(f"{name} 必须是字符串")
         audio = row.get("audio", "").strip()
@@ -99,7 +110,16 @@ class Question:
         fields.update(
             {
                 k: row.get(k, "").strip()
-                for k in ("passage", "transcript", "translation", "source", "source_url", "credit", "license")
+                for k in (
+                    "passage",
+                    "transcript",
+                    "translation",
+                    "source",
+                    "source_url",
+                    "credit",
+                    "license",
+                    "provenance",
+                )
             }
         )
         return cls(

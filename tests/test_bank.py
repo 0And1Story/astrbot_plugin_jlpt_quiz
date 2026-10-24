@@ -65,6 +65,7 @@ def test_answer_parser(text, expected):
         {"category": "listening"},
         {"category": "reading"},
         {"audio": "file:///etc/passwd"},
+        {"provenance": None},
     ],
 )
 def test_invalid_question_rejected(tmp_path, changes):
@@ -158,6 +159,8 @@ def test_entire_bundled_bank_is_loadable_and_unique():
     assert all(bank.pools[(f"N{i}", "vocabulary")] for i in range(1, 6))
     assert all(q.source_url.startswith("https://raw.githubusercontent.com/") for q in bank.questions)
     assert all(q.explanation for q in bank.questions)
+    assert all(q.provenance for q in bank.questions)
+    assert all(q.ai_generated == q.source.startswith("iamcheyan/jlpt-drill") for q in bank.questions)
 
 
 def test_load_reports_file_and_line(tmp_path):

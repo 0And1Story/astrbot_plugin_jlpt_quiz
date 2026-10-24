@@ -161,6 +161,7 @@ def build(lock: dict, cache: Path) -> tuple[list[dict], dict]:
                             signature = json.dumps(candidate, ensure_ascii=False, sort_keys=True)
                             candidate["id"] = f"{source['key']}-{hashlib.sha256(signature.encode()).hexdigest()[:16]}"
                         candidate.update(source=source["name"], source_url=url, ai_generated=source["ai_generated"])
+                        candidate["provenance"] = source.get("provenance", "")
                         candidate["license"] = source["license"]
                         if source["license"].startswith("CC "):
                             candidate["credit"] = f"{source['name']} · {source['license']}；已转换题库格式。"

@@ -402,6 +402,23 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("CC BY-SA 4.0", result)
         self.assertIn("https://example.com/source", result)
 
+    async def test_source_notes_distinguish_unknown_generation_and_ai_review(self):
+        from dataclasses import replace
+
+        for note in ("是否由 AI 生成未披露", "原始生成方式未披露；含 Claude AI 审核"):
+            question = replace(TEST_QUESTIONS[0], ai_generated=False, provenance=note)
+            round_ = plugin.Round(("test",), question, "alice", "origin", True)
+            result = self.bot.solution_text(round_, "答案")
+            self.assertIn(note, result)
+            self.assertNotIn("AI／辅助生成练习题", result)
+
+    async def test_legacy_custom_bank_ai_flag_keeps_its_source_label(self):
+        from dataclasses import replace
+
+        question = replace(TEST_QUESTIONS[0], ai_generated=True, provenance="")
+        result = self.bot.solution_text(plugin.Round(("test",), question, "alice", "origin", True), "答案")
+        self.assertIn("AI／辅助生成练习题", result)
+
     async def test_reveal_phrase_keeps_owner_permission(self):
         await self.bot.start(Event(), "N5", "grammar")
         event = Event(sender="bob", message="查看答案")

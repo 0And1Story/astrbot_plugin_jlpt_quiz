@@ -83,7 +83,12 @@ def main():
                 duration = float(result.stdout.strip())
             candidate.update(
                 audio=destination.as_posix(),
-                ai_generated=True,
+                ai_generated=False,
+                provenance=(
+                    "原始生成方式未披露；含 Claude AI 审核；音频为合成语音"
+                    if level == "N5"
+                    else "原始生成方式未披露；音频为合成语音"
+                ),
                 source=f"JLPTSuccess {level} 合成听力（本地自用）",
                 source_url=BASE + f"{level}/data/listening.json",
                 shuffle_options=False,

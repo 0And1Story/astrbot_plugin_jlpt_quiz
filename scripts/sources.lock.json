@@ -446,7 +446,8 @@
           "category": "vocabulary",
           "question_type": "vocab_usage"
         }
-      ]
+      ],
+      "provenance": "上游声明全部由 AI 生成"
     },
     {
       "key": "kumitaku",
@@ -454,7 +455,7 @@
       "revision": "87bafea1e360a2b88d94cd3f4447b50de9dcf48c",
       "name": "Kumitaku 原创 N1 模拟题",
       "license": "MIT",
-      "ai_generated": true,
+      "ai_generated": false,
       "files": [
         {
           "path": "README.md",
@@ -480,7 +481,8 @@
           "category": "grammar",
           "question_type": "grammar_order"
         }
-      ]
+      ],
+      "provenance": "原创模拟题；是否由 AI 生成未披露"
     },
     {
       "key": "yomitaku",
@@ -488,7 +490,7 @@
       "revision": "2f4ed8ef8c1ac3da343d4adac86969acfe23aaac",
       "name": "Yomitaku 原创 N1 阅读练习",
       "license": "MIT",
-      "ai_generated": true,
+      "ai_generated": false,
       "files": [
         {
           "path": "js/bank/tanbun.js",
@@ -542,7 +544,8 @@
           "sha256": "c0a72bf3486ab84fa3bb29be74673b9fd08432483e7b57d0f7ad2f5673c0c2cf",
           "role": "notice"
         }
-      ]
+      ],
+      "provenance": "原创模拟题；是否由 AI 生成未披露"
     },
     {
       "key": "success-n4",
@@ -550,7 +553,7 @@
       "revision": "708a995691dcd0983e2ede47db423281b1cd343a",
       "name": "JLPTSuccess N4 Tutor",
       "license": "CC BY 4.0",
-      "ai_generated": true,
+      "ai_generated": false,
       "files": [
         {
           "path": "N4/data/reading.json",
@@ -569,7 +572,8 @@
           "sha256": "b4dc122c82785796c7dba758ce667a71906665ef25f77e1b51bc704a3259c62c",
           "role": "notice"
         }
-      ]
+      ],
+      "provenance": "原创练习题；是否由 AI 生成未披露"
     },
     {
       "key": "success-n5",
@@ -577,7 +581,7 @@
       "revision": "708a995691dcd0983e2ede47db423281b1cd343a",
       "name": "JLPTSuccess N5 Tutor",
       "license": "CC BY-SA 4.0",
-      "ai_generated": true,
+      "ai_generated": false,
       "files": [
         {
           "path": "N5/data/reading.json",
@@ -596,7 +600,8 @@
           "sha256": "b4dc122c82785796c7dba758ce667a71906665ef25f77e1b51bc704a3259c62c",
           "role": "notice"
         }
-      ]
+      ],
+      "provenance": "原始生成方式未披露；含 Claude AI 审核"
     }
   ]
 }
