@@ -14,6 +14,7 @@ from .quiz.types import CATEGORIES, TYPES, parse_filters
 
 ROOT = Path(__file__).resolve().parent
 ROUND_EXTRA = "astrbot_plugin_jlpt_quiz:round"
+READING_CHARS_PER_MINUTE = 300
 
 
 class ActiveQuizAnswerFilter(filter.CustomFilter):
@@ -194,6 +195,11 @@ class JLPTQuizPlugin(Star):
         if not round_:
             return
         timeout = self.timeout(round_.group, question.category)
+        if timeout and question.category == "reading" and question.passage.strip():
+            text = question.passage + question.prompt + "".join(question.options)
+            characters = sum(not character.isspace() for character in text)
+            estimated_seconds = math.ceil(characters * 60 / READING_CHARS_PER_MINUTE) + 30
+            timeout = max(timeout, estimated_seconds)
         if timeout and question.category == "listening" and question.audio_duration_seconds:
             timeout = max(timeout, math.ceil(question.audio_duration_seconds) + 30)
         try:

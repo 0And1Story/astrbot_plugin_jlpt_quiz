@@ -255,10 +255,65 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(self.bot.tasks)
 
     async def test_reading_start_uses_reading_timeout(self):
+        from dataclasses import replace
+
+        question = replace(next(q for q in TEST_QUESTIONS if q.category == "reading"), passage="短文です。")
+        self.bot.bank = plugin.QuestionBank([question])
         self.bot.config["group_reading_timeout_seconds"] = 245
         event = Event()
-        await self.bot.start(event, "N2", "reading")
+        await self.bot.start(event, question.level, "reading")
         self.assertIn("245 秒内作答", event.messages[-1].text)
+
+    async def test_long_reading_timeout_counts_all_visible_text_and_ignores_whitespace(self):
+        from dataclasses import replace
+
+        question = replace(
+            next(q for q in TEST_QUESTIONS if q.category == "reading"),
+            passage="あ" * 1002 + " \n\t　" * 1000,
+            prompt="い" * 100,
+            options=tuple("う" * 100 + label for label in "ABCD"),
+        )
+        self.bot.bank = plugin.QuestionBank([question])
+        self.bot.config["group_reading_timeout_seconds"] = 60
+        event = Event()
+        await self.bot.start(event, question.level, "reading")
+        # 1,506 visible characters take 302 seconds, plus 30 seconds to decide.
+        self.assertIn("332 秒内作答", event.messages[-1].text)
+        round_ = self.bot.sessions.active(plugin.session_key(event))
+        self.assertAlmostEqual(round_.deadline - time.monotonic(), 332, delta=1)
+
+    async def test_private_reading_extends_only_when_a_timeout_is_enabled(self):
+        from dataclasses import replace
+
+        question = replace(next(q for q in TEST_QUESTIONS if q.category == "reading"), passage="あ" * 3000)
+        self.bot.bank = plugin.QuestionBank([question])
+        event = Event(group="")
+        await self.bot.start(event, question.level, "reading")
+        self.assertIn("本题不限时", event.messages[-1].text)
+        round_ = self.bot.sessions.active(plugin.session_key(event))
+        self.assertIsNone(round_.deadline)
+        self.assertIsNone(round_.timer)
+
+        self.bot.config["private_timeout_seconds"] = 60
+        timed = Event(group="", sender="bob")
+        await self.bot.start(timed, question.level, "reading")
+        round_ = self.bot.sessions.active(plugin.session_key(timed))
+        self.assertGreater(round_.deadline - time.monotonic(), 600)
+        self.assertIsNotNone(round_.timer)
+
+    async def test_image_only_reading_uses_configured_timeout(self):
+        from dataclasses import replace
+
+        question = replace(
+            next(q for q in TEST_QUESTIONS if q.category == "reading"),
+            passage=" \n\t　",
+            passage_images=("https://example.com/passage.png",),
+        )
+        self.bot.bank = plugin.QuestionBank([question])
+        self.bot.config["group_reading_timeout_seconds"] = 90
+        event = Event()
+        await self.bot.start(event, question.level, "reading")
+        self.assertIn("90 秒内作答", event.messages[-1].text)
 
     async def test_zero_threshold_folds_short_passages(self):
         self.bot.config["reading_forward_threshold"] = 0
