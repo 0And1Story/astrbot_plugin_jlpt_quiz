@@ -1,6 +1,6 @@
 # 添加题库
 
-插件自动加载 `data/*.jsonl`（默认题库）和 `local_data/*.jsonl`（本地自用题库）。添加后重载插件。`local_data/` 已被 Git 忽略；也可以在设置中指定其他题库目录。
+插件会加载 `data/`、`local_data/` 和设置中指定目录下的 `.jsonl` 文件（含子目录）。题库按来源平铺保存，例如 `data/drill.jsonl`、`data/success.jsonl`；授权与上游说明单独保存在 `data/upstream/`。本地媒体路径相对于各自 JSONL 所在目录。添加后重载插件。`local_data/` 已被 Git 忽略。
 
 ## 官方 JLPT 样题（自行下载）
 
@@ -28,15 +28,15 @@ python scripts/import_success_audio.py
 
 来源含 N4 30 道、N5 50 道听力；导入器会剔除重复选项等无效题目，实际数量以输出为准。安装了 ffprobe 时还会读取实际音频时长。下载的来源声明保留在 `tmp/private_sources/success/`，转换结果和音频保存在 `local_data/`。
 
-## jlpt-test 新制真题（试导入）
+## JLPT 历年真题（jlpt-freq）
 
-[jlpt-test](https://github.com/eulerex/jlpt-test) 收录历年试题的提取文本，原始试卷和听力音频未包含在仓库中。需要 Python ≥ 3.10：
+[5Mcv4He/jlpt-freq](https://github.com/5Mcv4He/jlpt-freq) 收录历年试题的提取文本，原始试卷和听力音频未包含在仓库中。需要 Python ≥ 3.10：
 
 ```bash
 python scripts/import_jlpt_test.py
 ```
 
-当前可导入 49 道词汇、文法题（N1 26 道、N4 23 道），重载插件后可用。仅处理 2010 年起的新制题目，跳过 OCR 题面、答案无法对齐、版式缺失及已发现的转录错误；暂不导入阅读、听力、排序等题型，也没有可靠的逐题解析。
+导入的新制题目保存在 `local_data/jlpt-test.jsonl`。重载插件后可用 `/jlpt抽题 真题`，也可组合等级、题型。题面保留上游转录并显示 OCR 提示，尚未纠错，也没有可靠的逐题解析；无法拆分题目或匹配答案的条目会跳过。
 
 来源未提供再分发许可，题目仅写入 Git 忽略的 `local_data/jlpt-test.jsonl`。下载缓存及导入报告在 `tmp/`，不随插件分发。
 
@@ -55,5 +55,6 @@ python scripts/import_jlpt_test.py
 - `images`／`passage_images` 为图片路径数组；本地媒体路径相对于 JSONL，必须位于题库目录内。媒体也可使用 HTTP(S) URL。
 - 图片题或音频内含选项编号时，设 `shuffle_options: false`，避免编号错位。
 - 可用 `provenance` 说明生成与审核方式；`ai_generated: true` 表示已确认由 AI 生成，未标记不代表已确认人工编写。
+- `past_paper: true` 添加真题标签并支持真题筛选；`ocr_warning: true` 显示 OCR 识别可能不准确的提示。
 
 仅添加自己有权使用的材料，并保留对应作者、来源与使用条件。

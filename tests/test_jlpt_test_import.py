@@ -35,8 +35,10 @@ def test_answer_and_exam_numbers_align_and_convert_to_zero_based(tmp_path):
         q = importer.Question.from_dict(row, tmp_path)
         assert q.ai_generated is False
         assert q.question_type == "vocab_context"
-        assert q.source_url.startswith(f"https://github.com/eulerex/jlpt-test/blob/{importer.REVISION}/")
-        assert "暂无可靠" in q.explanation
+        assert q.source_url.startswith(f"https://github.com/5Mcv4He/jlpt-freq/blob/{importer.REVISION}/")
+        assert "\u6682\u65e0\u53ef\u9760" in q.explanation
+        assert row["past_paper"] is True
+        assert row["ocr_warning"] is True
 
 
 def test_numeric_table_requires_whole_unambiguous_number_answer_pairs():
@@ -66,37 +68,39 @@ def test_lower_levels_and_roman_group_headings_have_separate_numbering():
     ]
 
 
-@pytest.mark.parametrize(
-    "bad",
-    [
-        "問題2 231",  # Disagrees with the other answer sheet.
-        "問題2 2344",  # Extra answer cannot be silently discarded.
-        "問題2 23",  # Insufficient answers.
-    ],
-)
-def test_conflicting_or_incomplete_answer_groups_rejected(bad):
-    rows, _ = importer.convert([paper(), answer(), answer(bad)])
-    if bad.endswith("23"):
-        # The malformed claim is ignored; the complete independent sheet remains.
-        assert len(rows) == 3
-    else:
-        assert rows == []
+def test_answer_conflict_isolated_to_the_conflicting_question():
+    rows, report = importer.convert([paper(), answer(), answer("問題2\n7、2\n8、1\n9、4")])
+    assert [row["id"].rsplit("q", 1)[1] for row in rows] == ["7", "9"]
+    assert any(item["number"] == 8 for item in report["answer_conflicts"])
 
 
-@pytest.mark.parametrize(
-    "mutation",
-    [
-        lambda text: text.replace("8 言葉", "10 言葉"),
-        lambda text: text.replace("4 丁", ""),
-        lambda text: text.replace("( )", "答え", 2),
-        lambda text: text.replace("2 乙", "2 甲"),
-        lambda text: text + "\n新浪微博:advertisement",
-    ],
-)
-def test_missing_layout_options_or_contaminated_text_rejected(mutation):
+def test_partial_nonconsecutive_questions_import_independently():
     source = paper()
-    source["text"] = mutation(source["text"])
-    assert importer.convert([source, answer()])[0] == []
+    source["text"] = source["text"].replace("8 言葉8は( )です。\n1 甲\n2 乙\n3 丙\n4 丁\n", "")
+    rows, _ = importer.convert([source, answer("問題2\n7、2\n9、4")])
+    assert [row["id"].rsplit("q", 1)[1] for row in rows] == ["7", "9"]
+
+
+def test_extra_answer_does_not_invalidate_other_questions():
+    rows, _ = importer.convert([paper(), answer("問題2\n7、2\n8、3\n9、4\n10、1")])
+    assert [row["id"].rsplit("q", 1)[1] for row in rows] == ["7", "8", "9"]
+
+
+def test_ocr_source_and_original_typo_are_preserved():
+    source = paper()
+    source["method"] = "ocr"
+    source["text"] = source["text"].replace("言葉7", "言は7")
+    rows, _ = importer.convert([source, answer()])
+    assert rows
+    assert "言は7" in rows[0]["prompt"]
+    assert all(row["ocr_warning"] and row["past_paper"] for row in rows)
+
+
+def test_incomplete_options_skip_only_the_damaged_candidate():
+    source = paper()
+    source["text"] = source["text"].replace("8 言葉8は( )です。\n1 甲\n2 乙\n3 丙\n4 丁", "8 言葉8は( )です。\n1 甲\n3 丙\n4 丁")
+    rows, _ = importer.convert([source, answer()])
+    assert [row["id"].rsplit("q", 1)[1] for row in rows] == ["7", "9"]
 
 
 def test_time_values_are_not_misread_as_extra_option_labels():
@@ -120,24 +124,49 @@ def test_numbered_entries_must_match_complete_question_range():
 
 
 def test_missing_underlines_and_star_positions_are_not_reconstructed():
-    assert not ({"vocab_reading", "vocab_synonym", "grammar_order"} & importer.SUPPORTED)
+    from scripts.jlpt_test_parser import SUPPORTED
+    assert not ({"vocab_reading", "vocab_synonym", "grammar_order"} & SUPPORTED)
     group = Block("grammar", 5, "grammar_fill", "1 文は★です。\n1 甲\n2 乙\n3 丙\n4 丁")
     with pytest.raises(ValueError):
         parse_questions(group, {1: (1, "source", "")})
 
 
-def test_old_undated_and_ocr_question_papers_not_imported():
-    assert importer.session(paper(month=None)) is None
+def test_unknown_month_does_not_pair_other_sheets_and_old_system_is_skipped():
+    assert importer.session(paper(month=None)) == ("N1", 2023, 0)
     assert importer.convert([paper(month=None), answer()])[0] == []
-    assert importer.convert([paper(method="ocr"), answer()])[0] == []
     assert importer.convert([paper(year=2009), answer(year=2009)])[0] == []
+
+
+def test_unknown_month_can_use_its_own_embedded_answers_only():
+    source = paper(month=None)
+    source["source_file"] = "exam-with-answers.pdf"
+    source["text"] += "\n問題2 234"
+    rows, _ = importer.convert([source])
+    assert len(rows) == 3
+    assert all("月份未注明" in row["source"] for row in rows)
+    unrelated = answer(month=None)
+    assert importer.convert([paper(month=None), unrelated])[0] == []
 
 
 def test_duplicate_questions_and_conflicting_versions():
     rows, _ = importer.convert([paper(), paper(), answer()])
     assert len(rows) == 3
     assert importer.convert([paper(), answer()], {importer.fingerprint(r) for r in rows})[0] == []
-    assert importer.convert([paper(), paper(word="別の言葉"), answer()])[0] == []
+    rows, _ = importer.convert([paper(), paper(word="別の言葉"), answer()])
+    assert len(rows) == 3
+
+
+def test_multiple_versions_choose_one_original_text_deterministically():
+    text_copy = paper("原始转录甲")
+    text_copy["output_file"] = "extracted_text/甲.txt"
+    ocr_copy = paper("原始转录乙", method="ocr")
+    ocr_copy["output_file"] = "extracted_text/乙.txt"
+    rows, _ = importer.convert([ocr_copy, text_copy, answer()])
+    assert len(rows) == 3
+    assert all("原始转录甲" in row["prompt"] for row in rows)
+    assert all("原始转录乙" not in row["prompt"] for row in rows)
+    reversed_rows, _ = importer.convert([text_copy, ocr_copy, answer()])
+    assert [row["prompt"] for row in reversed_rows] == [row["prompt"] for row in rows]
 
 
 def test_identical_content_with_different_answers_is_not_kept_arbitrarily():
@@ -160,7 +189,7 @@ def test_archive_reads_unicode_names_but_excludes_old_system(tmp_path):
 
 
 def test_cached_archive_checksum_failure_preserves_file(tmp_path):
-    path = tmp_path / f"jlpt-test-{importer.REVISION[:8]}.zip"
+    path = tmp_path / f"jlpt-freq-{importer.REVISION[:8]}.zip"
     path.write_bytes(b"broken")
     assert hashlib.sha256(path.read_bytes()).hexdigest() != importer.SHA256
     with pytest.raises(ValueError, match="checksum"):
