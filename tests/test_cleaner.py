@@ -206,8 +206,37 @@ def test_reported_invalid_questions_are_excluded_from_default_bank():
     root = Path(__file__).resolve().parents[1]
     rows = [json.loads(line) for line in (root / "data/questions.jsonl").read_text(encoding="utf-8").splitlines()]
     ids = {row["id"] for row in rows}
-    assert {"kumitaku-km-51-2", "n1-vocab_context-1580", "n1-vocab_synonym-011"}.isdisjoint(ids)
+    assert {"kumitaku-km-51-2", "n1-vocab_context-1580", "n1-vocab_synonym-011", "n2-vocab_reading-0790"}.isdisjoint(
+        ids
+    )
     assert all("目标词：" not in r["prompt"] for r in rows if r["question_type"] in {"vocab_context", "vocab_kanji"})
+
+
+def test_reading_explanation_cannot_explain_a_different_target():
+    row = dict(
+        sentence="自分の実力を《証明》するために試験を受ける。",
+        target="証明",
+        verified=True,
+        options=["かつぶ", "しょうぶ", "しょうぶう", "きづく"],
+        answer=1,
+        explanation="1. 正确答案“しょうぶ”是《勝負》的正确读音。例句描述了一场紧张激烈的比赛。",
+    )
+    with pytest.raises(ValueError, match="reading_target_explanation_conflict"):
+        normalize_extra_drill(row, "N2", "vocab_reading")
+    row["options"][1] = "しょうめい"
+    row["explanation"] = "正确答案“しょうめい”是《証明》的正确读音。"
+    assert normalize_extra_drill(row, "N2", "vocab_reading")[0]["answer"] == 1
+
+
+def test_reading_explanation_can_discuss_distractors_and_individual_characters():
+    row = dict(
+        sentence="自分の実力を《証明》する。",
+        target="証明",
+        options=["しょうぶ", "しょうめい", "しょめい", "めいしょう"],
+        answer=1,
+        explanation="正确读音是「しょうめい」。「明」の読みに注意。干扰项“しょうぶ”是《勝負》的正确读音。",
+    )
+    assert normalize_extra_drill(row, "N2", "vocab_reading")[0]["answer"] == 1
 
 
 def test_success_correct_answer_text_is_mapped_to_index():

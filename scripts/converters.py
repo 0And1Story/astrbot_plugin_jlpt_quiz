@@ -80,6 +80,12 @@ def normalize_extra_drill(row, level, kind):
             if kind != "vocab_usage" or not target:
                 raise ValueError("missing_vocabulary_prompt")
             prompt = f"请选择「{target}」用法正确的一句。"
+        if kind == "vocab_reading" and target:
+            # Compare an explicit positive claim, not words cited as distractors.
+            head = re.split(r"干扰|干擾", row.get("explanation", ""), maxsplit=1)[0]
+            stated_targets = re.findall(r"(?:是|为|為)\s*[「《]([^」》]+)[」》]的(?:正确|正確)?(?:读音|讀音)", head)
+            if stated_targets and target not in stated_targets:
+                raise ValueError("reading_target_explanation_conflict")
         if kind == "vocab_context" and target and re.match(r"^意味\s*[:：]", row.get("explanation", "")):
             raise ValueError("definition_template_not_context")
         if kind == "vocab_synonym" and target and any(compact(option) == compact(target) for option in base["options"]):
