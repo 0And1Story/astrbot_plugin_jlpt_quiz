@@ -1,0 +1,67 @@
+{
+  "group_vocabulary_timeout_seconds": {
+    "description": "群聊词汇题超时（秒）",
+    "type": "int",
+    "default": 60,
+    "hint": "题目发送完成后开始计时，5–3600 秒。"
+  },
+  "group_grammar_timeout_seconds": {
+    "description": "群聊文法题超时（秒）",
+    "type": "int",
+    "default": 60,
+    "hint": "题目完整发送后开始计时，5–3600 秒。首个有效答案立即结算；超时公布答案和解析。"
+  },
+  "group_reading_timeout_seconds": {
+    "description": "群聊阅读题超时（秒）",
+    "type": "int",
+    "default": 180,
+    "hint": "阅读文章和题目发送完成后开始计时，5–3600 秒；可按群内阅读速度调整。"
+  },
+  "group_listening_timeout_seconds": {
+    "description": "群聊听力题超时（秒）",
+    "type": "int",
+    "default": 120,
+    "hint": "语音和题目发送完成后开始计时，5–3600 秒；题库提供时长时，至少预留音频时长加 30 秒。"
+  },
+  "private_timeout_seconds": {
+    "description": "私聊答题超时（秒）",
+    "type": "int",
+    "default": 0,
+    "hint": "0 为不限时；其他值限制在 1–86400 秒。重启后不恢复未完成题目。"
+  },
+  "reading_forward": {
+    "description": "群聊长文使用合并转发",
+    "type": "bool",
+    "default": true,
+    "hint": "OneBot v11 使用合并转发；发送失败或其他平台则回退为分段文本。"
+  },
+  "reading_forward_threshold": {
+    "description": "阅读折叠字数阈值",
+    "type": "int",
+    "default": 300,
+    "hint": "文章达到此长度时使用合并转发，0–5000 字；0 表示群聊阅读材料总是折叠（需开启合并转发）。"
+  },
+  "shuffle_options": {
+    "description": "随机打乱选项顺序",
+    "type": "bool",
+    "default": true,
+    "hint": "同步更新正确答案；解析中若含原选项编号，会附原题选项顺序供对照。"
+  },
+  "recent_questions": {
+    "description": "同会话避免重复的最近题数",
+    "type": "int",
+    "default": 20,
+    "hint": "每个等级／题型独立记录，0–200。小题库自动缩小窗口，重启清空。"
+  },
+  "custom_bank_dir": {
+    "description": "附加 JSONL 题库目录",
+    "type": "string",
+    "default": "",
+    "hint": "额外的 JSONL 题库目录。内置 data/ 和本地自用 local_data/ 会自动加载；相对路径以插件目录为基准，修改后重载插件。"
+  },
+  "show_source": {
+    "description": "在解析末尾显示题目来源",
+    "type": "bool",
+    "default": true
+  }
+}
