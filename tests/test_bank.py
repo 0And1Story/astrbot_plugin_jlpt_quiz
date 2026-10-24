@@ -69,6 +69,12 @@ def test_answer_parser(text, expected):
         {"ai_generated": "true"},
         {"ai_generated": 1},
         {"ai_generated": None},
+        {"past_paper": "true"},
+        {"past_paper": 1},
+        {"past_paper": None},
+        {"ocr_warning": "false"},
+        {"ocr_warning": 0},
+        {"ocr_warning": None},
     ],
 )
 def test_invalid_question_rejected(tmp_path, changes):
@@ -183,6 +189,29 @@ def test_ai_filter_combines_with_other_filters_and_rotates_matching_pool(
     assert bank.counts(False)[("N1", "grammar")] == 1
     assert sum(bank.counts(False).values()) == 2
     assert bank.draw("N5", "grammar", (), ai_generated=True) is None
+
+
+def test_past_paper_filter_combines_with_level_category_subtype_and_ai(tmp_path):
+    rows = [
+        row(id="paper-ai", level="N1", question_type="grammar_order", past_paper=True, ai_generated=True),
+        row(id="paper-human", level="N1", question_type="grammar_order", past_paper=True),
+        row(id="practice-ai", level="N1", question_type="grammar_order", ai_generated=True),
+        row(id="paper-other", level="N1", question_type="grammar_fill", past_paper=True),
+        row(id="paper-n5", level="N5", question_type="grammar_order", past_paper=True),
+    ]
+    bank = QuestionBank([Question.from_dict(r, tmp_path) for r in rows])
+    assert {bank.draw("N1", "grammar", (), question_type="grammar_order", past_paper=True).id for _ in range(2)} == {
+        "paper-ai",
+        "paper-human",
+    }
+    assert bank.draw("N1", "grammar", (), question_type="grammar_order", ai_generated=True, past_paper=True).id == "paper-ai"
+    assert bank.draw("N1", "grammar", (), question_type="grammar_order", ai_generated=False, past_paper=True).id == "paper-human"
+    assert bank.draw("N1", "grammar", (), question_type="grammar_fill", past_paper=True).id == "paper-other"
+    assert bank.draw("N5", "grammar", (), question_type="grammar_order", past_paper=True).id == "paper-n5"
+    assert bank.draw("N1", "grammar", (), question_type="grammar_order", past_paper=True).past_paper is True
+    assert sum(bank.counts(past_paper=True).values()) == 4
+    assert sum(bank.counts(ai_generated=True, past_paper=True).values()) == 1
+    assert sum(bank.counts(ai_generated=False, past_paper=True).values()) == 3
 
 
 def test_reading_can_use_images_without_text(tmp_path):

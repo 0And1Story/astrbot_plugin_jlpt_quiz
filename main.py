@@ -101,12 +101,13 @@ class JLPTQuizPlugin(Star):
             "/jlpt 文法排序 n1：N1 文法排序题\n"
             "/jlpt抽题 n1 AI 或 /jlpt抽题 n1 非AI：筛选 AI 生成标记\n"
             "AI 生成默认关闭，需在配置中启用；非AI表示未标记 AI 生成，不保证人工编写。\n"
+            "/jlpt抽题 真题 或 /jlpt抽题 n1 短文理解 真题：只抽取真题\n"
             "筛选条件用空格分隔、顺序不限，省略的条件不限制；/jlpt 无参数显示帮助。\n"
             "直接发送 1–4 或 A–D，无需 @机器人。\n"
             "群聊首个有效答案立即结算，答错也公布答案。\n"
             "发送「查看答案」或「放弃作答」公布答案；/jlpt结束 取消本题。\n"
             "提前公布或取消限出题者或 AstrBot 管理员。\n"
-            "/jlpt题库：题目数量。题库为练习题，来源随解析显示。",
+            "/jlpt题库：题目数量。来源随解析显示。",
         )
 
     @filter.command("jlpt题库", alias={"jlptbank"})
@@ -130,7 +131,7 @@ class JLPTQuizPlugin(Star):
         """查看细分题型与已加载题数。"""
         event.stop_event()
         enabled = self.config.get("enable_ai_generated", False)
-        lines = ["使用 /jlpt抽题 题型名，可加 N1–N5、AI 或非AI，参数顺序不限。题量为当前可抽取总数："]
+        lines = ["使用 /jlpt抽题 题型名，可加 N1–N5、AI、非AI 或真题，参数顺序不限。题量为当前可抽取总数："]
         for key, (_, name) in TYPES.items():
             count = (
                 sum(q.question_type == key and (enabled or not q.ai_generated) for q in self.bank.questions)
@@ -142,7 +143,7 @@ class JLPTQuizPlugin(Star):
 
     @filter.command("jlpt抽题")
     async def draw_type(self, event: AstrMessageEvent):
-        """按等级、大类、具体题型、AI 标记抽题；空格分隔，顺序不限。"""
+        """按等级、大类、具体题型、AI 标记和真题标记抽题；空格分隔，顺序不限。"""
         await self.draw_filtered(event, self.command_arguments(event))
 
     @filter.command("jlpt")
@@ -176,6 +177,7 @@ class JLPTQuizPlugin(Star):
         category: str,
         question_type: str | None = None,
         ai_generated: bool | None = None,
+        past_paper: bool = False,
     ):
         event.stop_event()
         if self.closing or str(event.get_sender_id()) == str(event.get_self_id()):
@@ -200,6 +202,7 @@ class JLPTQuizPlugin(Star):
             bool(self.config.get("shuffle_options", True)),
             question_type,
             ai_generated,
+            past_paper,
         )
         if not question:
             await self.send_text(
@@ -211,6 +214,7 @@ class JLPTQuizPlugin(Star):
                     if ai_generated is not None
                     else ""
                 )
+                + ("当前筛选：仅真题。" if past_paper else "")
                 + (
                     "可检查插件配置中的「启用 AI 生成题目」。"
                     if not self.config.get("enable_ai_generated", False)
@@ -249,9 +253,10 @@ class JLPTQuizPlugin(Star):
 
     async def send_question(self, event: AstrMessageEvent, round_: Round, timeout: int):
         question = round_.question
-        title = (
-            f"【JLPT {question.level} · {TYPES.get(question.question_type, ('', CATEGORIES[question.category]))[1]}】"
-        )
+        title = f"【JLPT {question.level} · {TYPES.get(question.question_type, ('', CATEGORIES[question.category]))[1]}】"
+        if question.past_paper:
+            title += "【真题】"
+        notice = "OCR 识别可能不准确。\n" if question.ocr_warning else ""
         if question.passage:
             await self.send_passage(event, title, question.passage, round_.group)
         if question.passage_images:
@@ -271,7 +276,7 @@ class JLPTQuizPlugin(Star):
         timer = f"{timeout} 秒内作答，超时公布答案。" if timeout else "本题不限时。"
         await self.send_text(
             event,
-            f"{title}\n{question.prompt}\n\n{options}\n\n发送 {choices}，{rule}\n{timer}\n"
+            f"{title}\n{notice}{question.prompt}\n\n{options}\n\n发送 {choices}，{rule}\n{timer}\n"
             f"出题者可发送「查看答案」或「放弃作答」。\n题号：{question.id}",
         )
 
@@ -353,7 +358,10 @@ class JLPTQuizPlugin(Star):
     def solution_text(self, round_: Round, heading: str) -> str:
         question = round_.question
         text = (
-            f"{heading}\n题号：{question.id}\n"
+            f"{heading}\n"
+            + ("【真题】\n" if question.past_paper else "")
+            + ("OCR 识别可能不准确。\n" if question.ocr_warning else "")
+            + f"题号：{question.id}\n"
             f"正确答案：{question.answer + 1}（{'ABCD'[question.answer]}）{question.options[question.answer]}\n\n"
         )
         if question.original_options and question.original_options != question.options:

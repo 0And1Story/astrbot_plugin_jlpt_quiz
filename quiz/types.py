@@ -46,13 +46,17 @@ def resolve_type(value: str) -> tuple[str, str | None] | None:
     return None
 
 
-def parse_filters(text: str) -> tuple[str | None, str, str | None, bool | None]:
-    """Combine optional level, category, subtype and AI filters in any order."""
+def parse_filters(text: str) -> tuple[str | None, str, str | None, bool | None, bool]:
+    """Combine optional level, category, subtype, AI and past-paper filters in any order."""
     level = None
     category = "all"
     question_type = None
     ai_generated = None
+    past_paper = False
     for token in text.split():
+        if token == "真题":
+            past_paper = True
+            continue
         if token.lower() in AI_FILTERS:
             selected_ai = AI_FILTERS[token.lower()]
             if ai_generated is not None and ai_generated != selected_ai:
@@ -77,4 +81,4 @@ def parse_filters(text: str) -> tuple[str | None, str, str | None, bool | None]:
             raise ValueError("一次只能指定一个具体题型。")
         category = selected_category
         question_type = selected_type or question_type
-    return level, category, question_type, ai_generated
+    return level, category, question_type, ai_generated, past_paper

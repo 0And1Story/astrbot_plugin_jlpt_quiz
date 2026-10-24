@@ -56,6 +56,8 @@ class Question:
     credit: str = ""
     license: str = ""
     audio_duration_seconds: float = 0
+    past_paper: bool = False
+    ocr_warning: bool = False
 
     @classmethod
     def from_dict(cls, row: dict[str, Any], base_dir: Path) -> Question:
@@ -85,6 +87,9 @@ class Question:
             raise ValueError("answer 必须为选项范围内的整数（从 0 开始）")
         if "ai_generated" in row and type(row["ai_generated"]) is not bool:
             raise ValueError("ai_generated 必须为布尔值")
+        for name in ("past_paper", "ocr_warning"):
+            if name in row and type(row[name]) is not bool:
+                raise ValueError(f"{name} 必须为布尔值")
         for name in (
             "passage",
             "audio",
@@ -140,6 +145,8 @@ class Question:
             shuffle_options=row.get("shuffle_options", True) is True,
             ai_generated=row.get("ai_generated") is True,
             audio_duration_seconds=duration,
+            past_paper=row.get("past_paper", False),
+            ocr_warning=row.get("ocr_warning", False),
         )
 
     def shuffled(self, rng: random.Random) -> Question:
@@ -190,6 +197,7 @@ class QuestionBank:
         shuffle: bool = True,
         question_type: str | None = None,
         ai_generated: bool | None = None,
+        past_paper: bool = False,
     ) -> Question | None:
         if level is not None and category != "all":
             pool = self.pools.get((level, category), [])
@@ -203,9 +211,11 @@ class QuestionBank:
             pool = [q for q in pool if q.question_type == question_type]
         if ai_generated is not None:
             pool = [q for q in pool if q.ai_generated == ai_generated]
+        if past_paper:
+            pool = [q for q in pool if q.past_paper]
         if not pool:
             return None
-        key = (*session_key, level, category, question_type, ai_generated)
+        key = (*session_key, level, category, question_type, ai_generated, past_paper)
         recent = self.recent.pop(key, [])
         # Small pools still rotate through all available questions.
         recent = recent[-min(max(0, recent_count), max(0, len(pool) - 1)) :] if recent_count and len(pool) > 1 else []
@@ -216,7 +226,9 @@ class QuestionBank:
             self.recent.popitem(last=False)
         return question.shuffled(random) if shuffle else question
 
-    def counts(self, ai_generated: bool | None = None) -> Counter:
+    def counts(self, ai_generated: bool | None = None, past_paper: bool = False) -> Counter:
         return Counter(
-            (q.level, q.category) for q in self.questions if ai_generated is None or q.ai_generated == ai_generated
+            (q.level, q.category)
+            for q in self.questions
+            if (ai_generated is None or q.ai_generated == ai_generated) and (not past_paper or q.past_paper)
         )

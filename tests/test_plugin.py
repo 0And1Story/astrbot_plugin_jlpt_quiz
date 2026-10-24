@@ -212,15 +212,34 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
 
         self.bot.start = AsyncMock()
         for command, expected in (
-            ("/jlpt抽题 文法", (None, "grammar", None, None)),
-            ("/jlpt抽题 n5", ("N5", "all", None, None)),
-            ("/jlpt抽题", (None, "all", None, None)),
-            ("/jlpt 词汇填空", (None, "vocabulary", "vocab_context", None)),
+            ("/jlpt抽题 文法", (None, "grammar", None, None, False)),
+            ("/jlpt抽题 n5", ("N5", "all", None, None, False)),
+            ("/jlpt抽题", (None, "all", None, None, False)),
+            ("/jlpt 词汇填空", (None, "vocabulary", "vocab_context", None, False)),
+            ("/jlpt抽题 短文理解 n1 真题", ("N1", "reading", "reading_short", None, True)),
         ):
             event = Event(message=command)
             handler = self.bot.draw_type if "抽题" in command else self.bot.jlpt
             await handler(event)
             self.bot.start.assert_awaited_with(event, *expected)
+
+    async def test_past_paper_label_and_ocr_warning_are_visible_in_question_and_solution(self):
+        from dataclasses import replace
+
+        question = replace(TEST_QUESTIONS[0], past_paper=True, ocr_warning=True, shuffle_options=False)
+        self.bot.bank = plugin.QuestionBank([question])
+        event = Event()
+        await self.bot.start(event, question.level, question.category)
+        question_text = event.messages[-1].text
+        self.assertIn("真题", question_text)
+        self.assertIn("OCR 识别可能不准确", question_text)
+
+        answer = Event(message="1")
+        self.assertTrue(self.filter_answer(answer))
+        await self.bot.answer(answer)
+        solution_text = "\n".join(message.text for message in answer.messages)
+        self.assertIn("真题", solution_text)
+        self.assertIn("OCR 识别可能不准确", solution_text)
 
     async def test_invalid_filters_do_not_start_a_round(self):
         for command in ("/jlpt抽题 文法排序 n1 拼写错误", "/jlpt 阅读 文法排序", "/jlpt抽题 n1 n2"):
