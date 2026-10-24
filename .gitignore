@@ -205,3 +205,9 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Downloaded upstream files and local question banks
+.cache/
+data/custom/
+/local_data/
+/tmp/
