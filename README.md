@@ -1,14 +1,38 @@
-# astrbot-plugin-helloworld
+# JLPT 刷题
 
-AstrBot 插件模板 / A template plugin for AstrBot plugin feature
+AstrBot 日语刷题插件，支持 N1–N5 **词汇、文法、阅读、听力**，可在私聊作答或群聊抢答。推荐 QQ／NapCat／OneBot v11，需 AstrBot ≥ 4.5.0。
 
-> [!NOTE]
-> This repo is just a template of [AstrBot](https://github.com/AstrBotDevs/AstrBot) Plugin.
-> 
-> [AstrBot](https://github.com/AstrBotDevs/AstrBot) is an agentic assistant for both personal and group conversations. It can be deployed across dozens of mainstream instant messaging platforms, including QQ, Telegram, Feishu, DingTalk, Slack, LINE, Discord, Matrix, etc. In addition, it provides a reliable and extensible conversational AI infrastructure for individuals, developers, and teams. Whether you need a personal AI companion, an intelligent customer support agent, an automation assistant, or an enterprise knowledge base, AstrBot enables you to quickly build AI applications directly within your existing messaging workflows.
+## 使用
 
-# Supports
+在 AstrBot 插件管理中通过本仓库地址安装／更新，启用后即可使用。
 
-- [AstrBot Repo](https://github.com/AstrBotDevs/AstrBot)
-- [AstrBot Plugin Development Docs (Chinese)](https://docs.astrbot.app/dev/star/plugin-new.html)
-- [AstrBot Plugin Development Docs (English)](https://docs.astrbot.app/en/dev/star/plugin-new.html)
+| 命令 | 功能 |
+| --- | --- |
+| `/n1词汇`、`/n1ch` | 词汇题 |
+| `/n1文法`、`/n1wf` | 文法题，含选择、排序和篇章文法 |
+| `/n1阅读`、`/n1yd` | 阅读题 |
+| `/n1听力`、`/n1tl` | 听力语音题 |
+| `/n1综合` | 综合抽题 |
+| `/jlpt抽题 文法` | 所有等级的文法题 |
+| `/jlpt 文法排序 n1` | N1 文法排序题，题型名称见 `/jlpt题型` |
+| `/jlpt`、`/jlpthelp` | 显示帮助 |
+| `/jlpt题库` | 查看当前题量 |
+| `/jlpt结束` | 取消本题 |
+
+将 `n1` 换成 `n2`～`n5` 即可切换等级。直接回复选项数字或字母，无需 @机器人；**群聊首个有效答案即结算，答错也公布答案**。发送“查看答案”或“放弃作答”可提前公布答案，提前公布和取消限出题者或 AstrBot 管理员。
+
+`/jlpt抽题` 后可按等级、大类、具体题型筛选，条件用空格分隔，顺序不限，省略的条件不限制。例如 `/jlpt抽题 文法排序 n1` 与 `/jlpt n1 文法排序` 等效；单独发送 `/jlpt抽题` 则从全部题目抽取。
+
+同一会话同时进行一道题。长阅读在 OneBot v11 群聊中使用合并转发；图片题按原题编号回答。
+
+## 设置
+
+在插件配置页调整：群聊词汇／文法默认 60 秒、阅读 180 秒、听力 120 秒（有时长信息时至少预留播放时长加 30 秒）；私聊默认 0（不限时）。阅读折叠阈值为 0～5000，0 表示总是折叠。已有配置升级后请自行核对私聊超时值。
+
+## 题库
+
+默认附带可分发的练习题库，来源与授权见 [题库署名](data/NOTICE.md)。部分内容由 AI 生成或审核，题目和解析仍可能有误。
+
+程序支持 21 个细分题型，各等级实际题量以 `/jlpt题库` 为准。官方样题、额外听力和自定义题库的添加方式见 [添加题库](data/QUESTION_BANKS.md)；这些本地数据不会随 Git 上传或被更新覆盖。
+
+插件代码使用 [AGPL-3.0](LICENSE)，题库内容遵循各自的许可证。
