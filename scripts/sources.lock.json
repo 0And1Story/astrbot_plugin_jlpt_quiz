@@ -1,0 +1,602 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "key": "drill",
+      "repo": "iamcheyan/jlpt-drill",
+      "revision": "d3e58db85a3496c5b13966028b6233565cbe7e57",
+      "name": "iamcheyan/jlpt-drill (AI 练习题)",
+      "license": "MIT (upstream README declaration)",
+      "ai_generated": true,
+      "files": [
+        {
+          "path": "README.md",
+          "sha256": "38c940542122e3b464109f959a1564e684d26d9d39ea51a0ddc69988feacbf1c",
+          "role": "notice"
+        },
+        {
+          "path": "data/SOURCES.md",
+          "sha256": "7633259bf36ad61dd5630ceb81477c584cde9050bec87d1715eeeb8daf9fe523",
+          "role": "notice"
+        },
+        {
+          "path": "data/n1/grammar_fill.json",
+          "sha256": "8d48064fd9570ca6cbadf0bba53ef457154f51d785b0a0860fc41a35a74145ae",
+          "level": "N1",
+          "category": "grammar",
+          "question_type": "grammar_fill"
+        },
+        {
+          "path": "data/n1/grammar_order.json",
+          "sha256": "d4ccdc777234ebce230dda2e04435ca2cd88d68c65b6af6223fa262343346f02",
+          "level": "N1",
+          "category": "grammar",
+          "question_type": "grammar_order"
+        },
+        {
+          "path": "data/n1/grammar_passage.json",
+          "sha256": "6c2ca01cb6980f3874195275ef58ca9de4131d43e850ceae34a84e706d6f0446",
+          "level": "N1",
+          "category": "grammar",
+          "question_type": "grammar_passage"
+        },
+        {
+          "path": "data/n1/reading_long.json",
+          "sha256": "bb06380c404655630d803de4cf158ff50c11fe8f3a78633c1680eab1c2ef5356",
+          "level": "N1",
+          "category": "reading",
+          "question_type": "reading_long"
+        },
+        {
+          "path": "data/n1/reading_medium.json",
+          "sha256": "608f5e24abcd41f6523dd8fadfcbef612785a95060cdb795c62bee0ebb4219d1",
+          "level": "N1",
+          "category": "reading",
+          "question_type": "reading_medium"
+        },
+        {
+          "path": "data/n1/reading_search.json",
+          "sha256": "3c4d1d1780db2a26f36a83af1007cb2d65e130ff1d5dad2d040eb71a2412b04c",
+          "level": "N1",
+          "category": "reading",
+          "question_type": "reading_search"
+        },
+        {
+          "path": "data/n1/reading_short.json",
+          "sha256": "03e660b76b8619516c14b5b588841501e18ef22fcc97f528fd0243792c6f2059",
+          "level": "N1",
+          "category": "reading",
+          "question_type": "reading_short"
+        },
+        {
+          "path": "data/n1/vocab_context.json",
+          "sha256": "4afefa5310b5f4bafc5e8df758112e8076c6a57661699ad9cd03576ebccfb6f8",
+          "level": "N1",
+          "category": "vocabulary",
+          "question_type": "vocab_context"
+        },
+        {
+          "path": "data/n1/vocab_kanji.json",
+          "sha256": "1e7f54fdc88f330bb79482125a39cb461eafc3938222f199da9d8e125b88b53c",
+          "level": "N1",
+          "category": "vocabulary",
+          "question_type": "vocab_kanji"
+        },
+        {
+          "path": "data/n1/vocab_reading.json",
+          "sha256": "dbb00dfa76c7825ec3af23cac4ee68d09955e43601aa2d09a2d638529357b41f",
+          "level": "N1",
+          "category": "vocabulary",
+          "question_type": "vocab_reading"
+        },
+        {
+          "path": "data/n1/vocab_synonym.json",
+          "sha256": "4ba7e78c38ee3ecd5972a56326993a2414bf55decc76f601ae02b2ed972bf386",
+          "level": "N1",
+          "category": "vocabulary",
+          "question_type": "vocab_synonym"
+        },
+        {
+          "path": "data/n1/vocab_usage.json",
+          "sha256": "b8c437fdaa7b867eabb4a420c48060a906690608ab27095bcbdb2f96f213afb5",
+          "level": "N1",
+          "category": "vocabulary",
+          "question_type": "vocab_usage"
+        },
+        {
+          "path": "data/n2/grammar_fill.json",
+          "sha256": "87e9530bd89968d2766aa280a32abfece5976f9966bdce411118b6658f1e5353",
+          "level": "N2",
+          "category": "grammar",
+          "question_type": "grammar_fill"
+        },
+        {
+          "path": "data/n2/grammar_order.json",
+          "sha256": "d453a7f625e18628fdcdacbd14582742ab3fe77a5edb25f535430b36567779d3",
+          "level": "N2",
+          "category": "grammar",
+          "question_type": "grammar_order"
+        },
+        {
+          "path": "data/n2/grammar_passage.json",
+          "sha256": "a07864bfb616461f88d94367fd8cf5d6a0cb2c9cfd9488187b468a15a5c5ad1d",
+          "level": "N2",
+          "category": "grammar",
+          "question_type": "grammar_passage"
+        },
+        {
+          "path": "data/n2/reading_long.json",
+          "sha256": "18b0e1566daa91099e2a108f8c6272587192073f55116545490c127f3ad22dc6",
+          "level": "N2",
+          "category": "reading",
+          "question_type": "reading_long"
+        },
+        {
+          "path": "data/n2/reading_medium.json",
+          "sha256": "dd1fcbf162166f2dbb0f5acc6f047b450e11bfb323ccbb5da00db68a857fd48f",
+          "level": "N2",
+          "category": "reading",
+          "question_type": "reading_medium"
+        },
+        {
+          "path": "data/n2/reading_search.json",
+          "sha256": "bf30a3acafaad6274209c582707fee8c6980c938b4aaa400033073d362c5b026",
+          "level": "N2",
+          "category": "reading",
+          "question_type": "reading_search"
+        },
+        {
+          "path": "data/n2/reading_short.json",
+          "sha256": "d0cab09c05d25ee4002eb8bdfd2a66ba91c32c4a1c26f5fe730fb754f4da7ed4",
+          "level": "N2",
+          "category": "reading",
+          "question_type": "reading_short"
+        },
+        {
+          "path": "data/n2/vocab_compound.json",
+          "sha256": "80571e63f5361bda0a4b5fe3d99bee5a675c248542a01d0aa82e1fd9c1be5e62",
+          "level": "N2",
+          "category": "vocabulary",
+          "question_type": "vocab_compound"
+        },
+        {
+          "path": "data/n2/vocab_context.json",
+          "sha256": "2a41b79599d63642f8884d0b38df0160ef8c44ceb6555d7a4409ca8b779f509c",
+          "level": "N2",
+          "category": "vocabulary",
+          "question_type": "vocab_context"
+        },
+        {
+          "path": "data/n2/vocab_kanji.json",
+          "sha256": "c5f626e8f86fd55696e654e8862e750aa3a92bdb39e2a3b9ae1d7ce0dcfe3938",
+          "level": "N2",
+          "category": "vocabulary",
+          "question_type": "vocab_kanji"
+        },
+        {
+          "path": "data/n2/vocab_reading.json",
+          "sha256": "f427596d9156f9e6d122c1d83b67f4c9657cb88d1cfc07b264360f78aa334d7f",
+          "level": "N2",
+          "category": "vocabulary",
+          "question_type": "vocab_reading"
+        },
+        {
+          "path": "data/n2/vocab_synonym.json",
+          "sha256": "70b1623eab2801a8229c2a35ed67430bbfa4d9d35525ef9061eca4a72e6f42be",
+          "level": "N2",
+          "category": "vocabulary",
+          "question_type": "vocab_synonym"
+        },
+        {
+          "path": "data/n2/vocab_usage.json",
+          "sha256": "0593d1a295ab94cf5e3e843b648d2c3f8470dcb63bf252a162e5759ca4c21b42",
+          "level": "N2",
+          "category": "vocabulary",
+          "question_type": "vocab_usage"
+        },
+        {
+          "path": "data/n3/grammar_fill.json",
+          "sha256": "05443d5b0b5dab3e87e5f84026a5b63ffdb2b4fef2e9d090f09423700c6936d6",
+          "level": "N3",
+          "category": "grammar",
+          "question_type": "grammar_fill"
+        },
+        {
+          "path": "data/n3/grammar_order.json",
+          "sha256": "ab6b15c5729e99aed8c26140121be66acdccc6288f4e826f58d2699fe851b874",
+          "level": "N3",
+          "category": "grammar",
+          "question_type": "grammar_order"
+        },
+        {
+          "path": "data/n3/grammar_passage.json",
+          "sha256": "65cd5c830822b19a0afcd09b48eb0242646a6fd2c2d81385170bc94fa1e82862",
+          "level": "N3",
+          "category": "grammar",
+          "question_type": "grammar_passage"
+        },
+        {
+          "path": "data/n3/reading_long.json",
+          "sha256": "37bb01df137c82b7bf43aa949fea59823861389355be57824e3e16af3849de3a",
+          "level": "N3",
+          "category": "reading",
+          "question_type": "reading_long"
+        },
+        {
+          "path": "data/n3/reading_medium.json",
+          "sha256": "93ce04e7c05d8d96568dcd987d898b5580b5c52c87badeb4128cab2803efc16f",
+          "level": "N3",
+          "category": "reading",
+          "question_type": "reading_medium"
+        },
+        {
+          "path": "data/n3/reading_search.json",
+          "sha256": "9a8895834306615dc705dfd7f050f10bb92fbde8ca9d2e3fba7644c297fcf3bd",
+          "level": "N3",
+          "category": "reading",
+          "question_type": "reading_search"
+        },
+        {
+          "path": "data/n3/reading_short.json",
+          "sha256": "39438fd1d876c21b132346c02e8c3e4a8783970fa6b2d62c0ecb2058b50a64d7",
+          "level": "N3",
+          "category": "reading",
+          "question_type": "reading_short"
+        },
+        {
+          "path": "data/n3/vocab_context.json",
+          "sha256": "b70c5dcb0caa6bed6472d54241e445837aafa8fe064c7dde6ef774d61fb9e245",
+          "level": "N3",
+          "category": "vocabulary",
+          "question_type": "vocab_context"
+        },
+        {
+          "path": "data/n3/vocab_kanji.json",
+          "sha256": "5dca54e9d2373cb326932c90849bf6cfb3ac0e65e322cc3ab7b93fb7ace8b069",
+          "level": "N3",
+          "category": "vocabulary",
+          "question_type": "vocab_kanji"
+        },
+        {
+          "path": "data/n3/vocab_reading.json",
+          "sha256": "09fd475dca1c450262101549be687b1f4fdd7a7b03a9a6a492faefe1225167bb",
+          "level": "N3",
+          "category": "vocabulary",
+          "question_type": "vocab_reading"
+        },
+        {
+          "path": "data/n3/vocab_synonym.json",
+          "sha256": "7219cecc57b98973644c7d3969879bdef1a19f5006e1e8c52d65780ebfd9d224",
+          "level": "N3",
+          "category": "vocabulary",
+          "question_type": "vocab_synonym"
+        },
+        {
+          "path": "data/n3/vocab_usage.json",
+          "sha256": "1ac3d92e660f2b54532d0571c83d6fd06c7d9576fafb360a5fc9532eece8b308",
+          "level": "N3",
+          "category": "vocabulary",
+          "question_type": "vocab_usage"
+        },
+        {
+          "path": "data/n4/grammar_fill.json",
+          "sha256": "20dcc72785e1f4dc6f92983b645ef1d86b3da69b70a2f858deb90f6260a76d97",
+          "level": "N4",
+          "category": "grammar",
+          "question_type": "grammar_fill"
+        },
+        {
+          "path": "data/n4/grammar_order.json",
+          "sha256": "975a56e93b813884ca6b68aa8846d453f32b883f01a1a7a7054ca97a9ebf1123",
+          "level": "N4",
+          "category": "grammar",
+          "question_type": "grammar_order"
+        },
+        {
+          "path": "data/n4/grammar_passage.json",
+          "sha256": "2c16344d90c24228f18c97868c0b25f15bee7eb88c817c8687a009dbd094ef20",
+          "level": "N4",
+          "category": "grammar",
+          "question_type": "grammar_passage"
+        },
+        {
+          "path": "data/n4/reading_long.json",
+          "sha256": "f803b3f4fd8f6008b17523a470d1a6a2a6ea421359f42c3126e6b447632c5a66",
+          "level": "N4",
+          "category": "reading",
+          "question_type": "reading_long"
+        },
+        {
+          "path": "data/n4/reading_medium.json",
+          "sha256": "594abafa913a22a821c80050e735b325bb13c8ee96deee3b92cb87e704727f22",
+          "level": "N4",
+          "category": "reading",
+          "question_type": "reading_medium"
+        },
+        {
+          "path": "data/n4/reading_search.json",
+          "sha256": "37ef5b45b579b300fabb61a8ea99435b7453d97700e5b74dec0a9fc7cca54903",
+          "level": "N4",
+          "category": "reading",
+          "question_type": "reading_search"
+        },
+        {
+          "path": "data/n4/reading_short.json",
+          "sha256": "458ca3d95bce8cc1139dee4c18051c286b4b21326bc651d8ad4465e3a9764fd6",
+          "level": "N4",
+          "category": "reading",
+          "question_type": "reading_short"
+        },
+        {
+          "path": "data/n4/vocab_context.json",
+          "sha256": "88cbe234ba05f97c6c57b3d6ef79a6308959e2159b10ad8ed6eb810fe98ab3b5",
+          "level": "N4",
+          "category": "vocabulary",
+          "question_type": "vocab_context"
+        },
+        {
+          "path": "data/n4/vocab_kanji.json",
+          "sha256": "bb21612298052f9f216b078d04cf00ece1a014255976e45709ef2f088c721245",
+          "level": "N4",
+          "category": "vocabulary",
+          "question_type": "vocab_kanji"
+        },
+        {
+          "path": "data/n4/vocab_reading.json",
+          "sha256": "117081ddfecfa00ad4f6058d63998d2842b137709f69826a3bf55d2e17da5b90",
+          "level": "N4",
+          "category": "vocabulary",
+          "question_type": "vocab_reading"
+        },
+        {
+          "path": "data/n4/vocab_synonym.json",
+          "sha256": "cf1c2543e91ce06fb1ba0282044d953447f9f2106399042aded2093f64fcec35",
+          "level": "N4",
+          "category": "vocabulary",
+          "question_type": "vocab_synonym"
+        },
+        {
+          "path": "data/n4/vocab_usage.json",
+          "sha256": "c898ea3f4babd61cd3ea2ed5990af5b8b45f6fba85ba516f3bad694f2bf4def3",
+          "level": "N4",
+          "category": "vocabulary",
+          "question_type": "vocab_usage"
+        },
+        {
+          "path": "data/n5/grammar_fill.json",
+          "sha256": "991d8c305cbc76fed25c183bf4d3a9d3820c23b9799992806d9f8722eadb3ec2",
+          "level": "N5",
+          "category": "grammar",
+          "question_type": "grammar_fill"
+        },
+        {
+          "path": "data/n5/grammar_order.json",
+          "sha256": "c4d684b8d6b8dc7ecff67ba0b105364906836a3b6d5f7b93610cd7e82369548f",
+          "level": "N5",
+          "category": "grammar",
+          "question_type": "grammar_order"
+        },
+        {
+          "path": "data/n5/grammar_passage.json",
+          "sha256": "1929c0e3e1e46a9d59122c3f4c57fd87678cf6ac62af64efdf604051ddea4a32",
+          "level": "N5",
+          "category": "grammar",
+          "question_type": "grammar_passage"
+        },
+        {
+          "path": "data/n5/reading_long.json",
+          "sha256": "7a4e9eca95325ed11a48d12706576468e80c8b734f7e7b9deb7cad48f460f734",
+          "level": "N5",
+          "category": "reading",
+          "question_type": "reading_long"
+        },
+        {
+          "path": "data/n5/reading_medium.json",
+          "sha256": "21c17586ccf4be20e3c68d20b141e65af4d1e81c7c3d8e07aa5373e47867a0ca",
+          "level": "N5",
+          "category": "reading",
+          "question_type": "reading_medium"
+        },
+        {
+          "path": "data/n5/reading_search.json",
+          "sha256": "68d0e927f8467e4fa1cb7e6477b9e5d70ff949ac5e60df2141d09935b1f4de81",
+          "level": "N5",
+          "category": "reading",
+          "question_type": "reading_search"
+        },
+        {
+          "path": "data/n5/reading_short.json",
+          "sha256": "623a0ce20b8ceca2135025a04238bfe15393d26d34882f9140519a2f8771b334",
+          "level": "N5",
+          "category": "reading",
+          "question_type": "reading_short"
+        },
+        {
+          "path": "data/n5/vocab_context.json",
+          "sha256": "bf4876afb733ec925c5f3abfb461f33c87027a4e467205cc8370166bd7083a2c",
+          "level": "N5",
+          "category": "vocabulary",
+          "question_type": "vocab_context"
+        },
+        {
+          "path": "data/n5/vocab_kanji.json",
+          "sha256": "cb85ee6ac5345a390d4102a0eec3840c65dae251ba3f857c433813f9187c6095",
+          "level": "N5",
+          "category": "vocabulary",
+          "question_type": "vocab_kanji"
+        },
+        {
+          "path": "data/n5/vocab_reading.json",
+          "sha256": "882593d5030fca4e5e274b69030d23339ad6abbd010f718b8a429791f2573c5c",
+          "level": "N5",
+          "category": "vocabulary",
+          "question_type": "vocab_reading"
+        },
+        {
+          "path": "data/n5/vocab_synonym.json",
+          "sha256": "10a4ef75987978b9beac0c7ff15762d3e3b276b3df8b25d7a26b1fc455a76418",
+          "level": "N5",
+          "category": "vocabulary",
+          "question_type": "vocab_synonym"
+        },
+        {
+          "path": "data/n5/vocab_usage.json",
+          "sha256": "a4286329cfff264ed015bd757fe308d031d3b8e8a1526a9594176f3252f7c01b",
+          "level": "N5",
+          "category": "vocabulary",
+          "question_type": "vocab_usage"
+        }
+      ]
+    },
+    {
+      "key": "kumitaku",
+      "repo": "Mocas-12/jlpt-n1-Kumitaku",
+      "revision": "87bafea1e360a2b88d94cd3f4447b50de9dcf48c",
+      "name": "Kumitaku 原创 N1 模拟题",
+      "license": "MIT",
+      "ai_generated": true,
+      "files": [
+        {
+          "path": "README.md",
+          "sha256": "16526e77c1a89923a3b5e2835afb4e362ad6cf2786b92a35a4193ef84352ec54",
+          "role": "notice"
+        },
+        {
+          "path": "LICENSE",
+          "sha256": "b17ceb82d82ee585cc27e3d1021ca9dcad98752ea0237ed948b2847a9d6e0f20",
+          "role": "notice"
+        },
+        {
+          "path": "js/bank/bun1.js",
+          "sha256": "8511c18d9127eaeefb80b47c9c38b443c99893eb43b4442e5cf50d5596ad9000",
+          "level": "N1",
+          "category": "grammar",
+          "question_type": "grammar_fill"
+        },
+        {
+          "path": "js/bank/kumi.js",
+          "sha256": "d1078c3831fa696b954ef31de69add7d6c3565e56288222cc1b599a6fda7ffaf",
+          "level": "N1",
+          "category": "grammar",
+          "question_type": "grammar_order"
+        }
+      ]
+    },
+    {
+      "key": "yomitaku",
+      "repo": "Mocas-12/jlpt-n1-Yomitaku",
+      "revision": "2f4ed8ef8c1ac3da343d4adac86969acfe23aaac",
+      "name": "Yomitaku 原创 N1 阅读练习",
+      "license": "MIT",
+      "ai_generated": true,
+      "files": [
+        {
+          "path": "js/bank/tanbun.js",
+          "sha256": "b6cad0938bce5a806e60c03679d5ea393124c1cd8f86a67f58dc7877af7f4196",
+          "level": "N1",
+          "category": "reading",
+          "question_type": "reading_short"
+        },
+        {
+          "path": "js/bank/chubun.js",
+          "sha256": "0afd1d5579d039b8f4939cb3921ddc28f34d895595f1076217c5d22131b51af1",
+          "level": "N1",
+          "category": "reading",
+          "question_type": "reading_medium"
+        },
+        {
+          "path": "js/bank/chobun.js",
+          "sha256": "ff59e77c21f877489e8a9849f2461699a60e749df31bbc05bf44befa8039bccc",
+          "level": "N1",
+          "category": "reading",
+          "question_type": "reading_long"
+        },
+        {
+          "path": "js/bank/togo.js",
+          "sha256": "31aaa2da3b32fb080f64baf923fdd91bb82354d4f3139036f59f117b39d5bbf5",
+          "level": "N1",
+          "category": "reading",
+          "question_type": "reading_integrated"
+        },
+        {
+          "path": "js/bank/shucho.js",
+          "sha256": "bddeec096a24b644c9dc944666e3db90e3cf87f747fc4b45ea754d1d0aa9b56d",
+          "level": "N1",
+          "category": "reading",
+          "question_type": "reading_thematic"
+        },
+        {
+          "path": "js/bank/joho.js",
+          "sha256": "680768656ab27ac56abbd459836d13c8006a6fd5514175b954510a5d027b181f",
+          "level": "N1",
+          "category": "reading",
+          "question_type": "reading_search"
+        },
+        {
+          "path": "LICENSE",
+          "sha256": "b17ceb82d82ee585cc27e3d1021ca9dcad98752ea0237ed948b2847a9d6e0f20",
+          "role": "notice"
+        },
+        {
+          "path": "README.md",
+          "sha256": "c0a72bf3486ab84fa3bb29be74673b9fd08432483e7b57d0f7ad2f5673c0c2cf",
+          "role": "notice"
+        }
+      ]
+    },
+    {
+      "key": "success-n4",
+      "repo": "gauravhq/JLPTSuccess",
+      "revision": "708a995691dcd0983e2ede47db423281b1cd343a",
+      "name": "JLPTSuccess N4 Tutor",
+      "license": "CC BY 4.0",
+      "ai_generated": true,
+      "files": [
+        {
+          "path": "N4/data/reading.json",
+          "sha256": "2f138e3e6fda1f0036b0b0a95b115ce23ed959c2aa9f62efeae95a9645e06b97",
+          "level": "N4",
+          "category": "reading",
+          "question_type": "reading_short"
+        },
+        {
+          "path": "N4/CONTENT-LICENSE.md",
+          "sha256": "d8fc05ef6a0a5e3fc67de0e242f25462b673e32f7e4159ab654977d64ca69b8b",
+          "role": "notice"
+        },
+        {
+          "path": "LICENSE",
+          "sha256": "b4dc122c82785796c7dba758ce667a71906665ef25f77e1b51bc704a3259c62c",
+          "role": "notice"
+        }
+      ]
+    },
+    {
+      "key": "success-n5",
+      "repo": "gauravhq/JLPTSuccess",
+      "revision": "708a995691dcd0983e2ede47db423281b1cd343a",
+      "name": "JLPTSuccess N5 Tutor",
+      "license": "CC BY-SA 4.0",
+      "ai_generated": true,
+      "files": [
+        {
+          "path": "N5/data/reading.json",
+          "sha256": "23200b76116a0182a41ae13e54f694924a50466b3708fb97e78714d387269246",
+          "level": "N5",
+          "category": "reading",
+          "question_type": "reading_short"
+        },
+        {
+          "path": "N5/CONTENT-LICENSE.md",
+          "sha256": "f28fa1e2cbcdb2065e5168c0b050cd4a7f9aabd7de877fb54e6f4179531a0a30",
+          "role": "notice"
+        },
+        {
+          "path": "LICENSE",
+          "sha256": "b4dc122c82785796c7dba758ce667a71906665ef25f77e1b51bc704a3259c62c",
+          "role": "notice"
+        }
+      ]
+    }
+  ]
+}
