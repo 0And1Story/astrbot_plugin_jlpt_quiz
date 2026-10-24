@@ -8,7 +8,7 @@ from astrbot.api.event import AstrMessageEvent, MessageChain, filter
 from astrbot.api.message_components import Image, Node, Nodes, Plain, Record
 from astrbot.api.star import Context, Star, register
 
-from .quiz.bank import QuestionBank
+from .quiz.bank import QuestionBank, discover_question_files
 from .quiz.session import QuizSessions, Round, is_reveal_request, parse_answer, session_key
 from .quiz.types import CATEGORIES, TYPES, parse_filters
 
@@ -51,8 +51,7 @@ class JLPTQuizPlugin(Star):
 
     async def initialize(self):
         try:
-            paths = sorted((ROOT / "data").glob("*.jsonl"))
-            paths.extend(sorted((ROOT / "local_data").glob("*.jsonl")))
+            directories = [ROOT / "data", ROOT / "local_data"]
             custom = str(self.config.get("custom_bank_dir", "")).strip()
             if custom:
                 directory = Path(custom).expanduser()
@@ -60,8 +59,8 @@ class JLPTQuizPlugin(Star):
                     directory = ROOT / directory
                 if not directory.is_dir():
                     raise ValueError("自定义题库目录不存在")
-                paths.extend(sorted(directory.glob("*.jsonl")))
-            paths = list(dict.fromkeys(path.resolve() for path in paths))
+                directories.append(directory)
+            paths = discover_question_files(*directories)
             self.bank = await asyncio.to_thread(QuestionBank.load, paths)
             logger.info("[JLPT] 已加载 %s 道题目", len(self.bank.questions))
         except Exception as exc:

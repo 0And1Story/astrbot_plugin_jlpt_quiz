@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.prepare_data import normalize_drill, parse_kumitaku
+from scripts.prepare_data import normalize_drill, parse_kumitaku, write_banks
 from scripts.converters import js_groups, normalize_extra_drill, normalize_js_group, normalize_success, validate_order
 
 
@@ -11,6 +11,16 @@ def test_json_in_js_is_decoded_without_executing_wrapper():
     text = 'window.BANK.push({"id":"x","questions":[{"label":"题型","q":"x","options":[],"answer":0,"explain":[]},]},);'
     assert parse_kumitaku(text)[0]["q"] == "x"
     assert parse_kumitaku("require('malicious');") == []
+
+
+def test_prepare_data_writes_banks_by_source(tmp_path):
+    rows = [
+        {"id": "drill-1", "source_url": "https://raw.githubusercontent.com/iamcheyan/jlpt-drill/main/q.json", "level": "N1"},
+        {"id": "success-1", "source_url": "https://raw.githubusercontent.com/gauravhq/JLPTSuccess/main/q.json", "level": "N4"},
+    ]
+    write_banks(rows, tmp_path)
+    assert json.loads((tmp_path / "drill.jsonl").read_text(encoding="utf-8")) == rows[0]
+    assert json.loads((tmp_path / "success.jsonl").read_text(encoding="utf-8")) == rows[1]
 
 
 def test_wrong_completed_sentence_rejected():
@@ -31,7 +41,12 @@ def test_wrong_completed_sentence_rejected():
 
 def test_bundled_report_excludes_known_bad_upstream_question():
     root = Path(__file__).resolve().parents[1]
-    rows = [json.loads(line) for line in (root / "data/questions.jsonl").read_text(encoding="utf-8").splitlines()]
+    rows = [
+        json.loads(line)
+        for path in (root / "data").rglob("*.jsonl")
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
     assert "n2-reading_short-001" not in {row["id"] for row in rows}
     assert not any("練習用文章です" in row.get("passage", "") for row in rows)
 
@@ -204,7 +219,12 @@ def test_synonym_question_cannot_offer_the_target_itself():
 
 def test_reported_invalid_questions_are_excluded_from_default_bank():
     root = Path(__file__).resolve().parents[1]
-    rows = [json.loads(line) for line in (root / "data/questions.jsonl").read_text(encoding="utf-8").splitlines()]
+    rows = [
+        json.loads(line)
+        for path in (root / "data").rglob("*.jsonl")
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
     ids = {row["id"] for row in rows}
     assert {"kumitaku-km-51-2", "n1-vocab_context-1580", "n1-vocab_synonym-011", "n2-vocab_reading-0790"}.isdisjoint(
         ids

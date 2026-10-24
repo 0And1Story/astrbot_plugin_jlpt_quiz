@@ -89,7 +89,7 @@ def load_plugin():
 
 plugin = load_plugin()
 TEST_QUESTIONS = tuple(
-    plugin.QuestionBank.load([Path(__file__).resolve().parents[1] / "data/questions.jsonl"]).questions
+    plugin.QuestionBank.load(plugin.discover_question_files(Path(__file__).resolve().parents[1] / "data")).questions
 )
 
 
@@ -680,7 +680,9 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(self.bot.sessions.rounds)
 
     async def test_audio_sent_as_record_and_transcript_only_after_answer(self):
-        question = plugin.QuestionBank.load([Path(__file__).resolve().parents[1] / "data/questions.jsonl"]).questions[0]
+        question = plugin.QuestionBank.load(
+            plugin.discover_question_files(Path(__file__).resolve().parents[1] / "data")
+        ).questions[0]
         from dataclasses import replace
 
         listening = replace(

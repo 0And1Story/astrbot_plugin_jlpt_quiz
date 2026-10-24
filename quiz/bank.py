@@ -12,6 +12,12 @@ from urllib.parse import urlparse
 from .types import CATEGORIES, DEFAULT_TYPES, TYPES
 
 
+def discover_question_files(*roots: Path) -> list[Path]:
+    """Find JSONL banks recursively and return each resolved path only once."""
+    paths = {path.resolve() for root in roots if root.is_dir() for path in root.rglob("*.jsonl") if path.is_file()}
+    return sorted(paths, key=lambda path: str(path).casefold())
+
+
 def media_path(value: str, base_dir: Path) -> str:
     parsed = urlparse(value)
     if parsed.scheme in {"http", "https"} and parsed.netloc:

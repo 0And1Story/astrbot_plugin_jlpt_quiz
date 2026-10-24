@@ -220,10 +220,38 @@ def build(lock: dict, cache: Path) -> tuple[list[dict], dict]:
     return result, report
 
 
+def source_file(row: dict) -> str:
+    """Return the stable bundled-bank filename for a normalized source row."""
+    url = row.get("source_url", "")
+    if "iamcheyan/jlpt-drill" in url:
+        return "drill"
+    if "Mocas-12/jlpt-n1-Kumitaku" in url:
+        return "kumitaku"
+    if "Mocas-12/jlpt-n1-Yomitaku" in url:
+        return "yomitaku"
+    if "gauravhq/JLPTSuccess" in url:
+        return "success"
+    raise ValueError(f"无法为题目确定来源文件：{row.get('id', '')}")
+
+
+def write_banks(questions: list[dict], output_dir: Path) -> None:
+    grouped: dict[str, list[dict]] = {}
+    for question in questions:
+        grouped.setdefault(source_file(question), []).append(question)
+    for source, rows in grouped.items():
+        target = output_dir / f"{source}.jsonl"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        temporary = target.with_suffix(".jsonl.tmp")
+        temporary.write_text(
+            "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8"
+        )
+        temporary.replace(target)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cache", type=Path, default=ROOT / ".cache" / "sources")
-    parser.add_argument("--output", type=Path, default=ROOT / "data" / "questions.jsonl")
+    parser.add_argument("--output-dir", type=Path, default=ROOT / "data")
     parser.add_argument("--report", type=Path, default=ROOT / "tmp" / "docs" / "build_report.json")
     args = parser.parse_args()
     lock = json.loads((ROOT / "scripts" / "sources.lock.json").read_text(encoding="utf-8"))
@@ -233,10 +261,9 @@ def main() -> None:
     for level in (f"N{i}" for i in range(1, 6)):
         if not any(q["level"] == level and q["category"] == "grammar" for q in questions):
             raise SystemExit(f"{level} 文法题为空，保留现有题库。")
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    temporary = args.output.with_suffix(".jsonl.tmp")
-    temporary.write_text("".join(json.dumps(q, ensure_ascii=False) + "\n" for q in questions), encoding="utf-8")
-    temporary.replace(args.output)
+    write_banks(questions, args.output_dir)
+    if args.output_dir.resolve() == (ROOT / "data").resolve():
+        (ROOT / "data" / "questions.jsonl").unlink(missing_ok=True)
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({k: report[k] for k in ("accepted", "counts", "rejected_reasons")}, ensure_ascii=False, indent=2))

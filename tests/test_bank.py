@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from quiz.bank import Question, QuestionBank
+from quiz.bank import Question, QuestionBank, discover_question_files
 from quiz.session import parse_answer
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -84,6 +84,18 @@ def test_local_audio_confined_and_portable(tmp_path):
         Question.from_dict(row(category="listening", audio="../clip.wav"), tmp_path)
     q = Question.from_dict(row(category="listening", audio="https://example.com/clip.wav"), tmp_path)
     assert q.audio.startswith("https://")
+
+
+def test_recursive_discovery_deduplicates_overlapping_roots_and_keeps_media_relative(tmp_path):
+    nested = tmp_path / "nested"
+    nested.mkdir()
+    (nested / "clip.wav").write_bytes(b"audio")
+    path = nested / "bank.jsonl"
+    path.write_text(json.dumps(row(category="listening", audio="clip.wav")) + "\n", encoding="utf-8")
+    paths = discover_question_files(tmp_path, nested)
+    assert paths == [path.resolve()]
+    bank = QuestionBank.load(paths)
+    assert bank.questions[0].audio == str((nested / "clip.wav").resolve())
 
 
 def test_shuffle_preserves_answer_and_original_labels(tmp_path):
@@ -189,7 +201,7 @@ def test_draw_rotates_small_pools_and_separates_levels(tmp_path):
 
 
 def test_entire_bundled_bank_is_loadable_and_unique():
-    bank = QuestionBank.load([ROOT / "data/questions.jsonl"])
+    bank = QuestionBank.load(discover_question_files(ROOT / "data"))
     assert len(bank.questions) > 1000
     assert all(bank.pools[(f"N{i}", "grammar")] for i in range(1, 6))
     assert all(bank.pools[(f"N{i}", "vocabulary")] for i in range(1, 6))
