@@ -28,6 +28,18 @@ python scripts/import_success_audio.py
 
 来源含 N4 30 道、N5 50 道听力；导入器会剔除重复选项等无效题目，实际数量以输出为准。安装了 ffprobe 时还会读取实际音频时长。下载的来源声明保留在 `tmp/private_sources/success/`，转换结果和音频保存在 `local_data/`。
 
+## jlpt-test 新制真题（试导入）
+
+[jlpt-test](https://github.com/eulerex/jlpt-test) 收录历年试题的提取文本，原始试卷和听力音频未包含在仓库中。需要 Python ≥ 3.10：
+
+```bash
+python scripts/import_jlpt_test.py
+```
+
+当前可导入 49 道词汇、文法题（N1 26 道、N4 23 道），重载插件后可用。仅处理 2010 年起的新制题目，跳过 OCR 题面、答案无法对齐、版式缺失及已发现的转录错误；暂不导入阅读、听力、排序等题型，也没有可靠的逐题解析。
+
+来源未提供再分发许可，题目仅写入 Git 忽略的 `local_data/jlpt-test.jsonl`。下载缓存及导入报告在 `tmp/`，不随插件分发。
+
 ## 自有 JSONL 题库
 
 每行一个 UTF-8 JSON 对象，例如：
