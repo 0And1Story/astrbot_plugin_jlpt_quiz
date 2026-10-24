@@ -8,14 +8,20 @@ from quiz.types import parse_filters
 @pytest.mark.parametrize(
     "text,expected",
     [
-        ("", (None, "all", None)),
-        ("文法", (None, "grammar", None)),
-        ("n1", ("N1", "all", None)),
-        ("文法排序", (None, "grammar", "grammar_order")),
-        ("  文法排序\tn1  ", ("N1", "grammar", "grammar_order")),
-        ("GRAMMAR_ORDER N1", ("N1", "grammar", "grammar_order")),
-        ("综合 n5", ("N5", "all", None)),
-        ("n1 N1 文法 文法排序 文法排序", ("N1", "grammar", "grammar_order")),
+        ("", (None, "all", None, None)),
+        ("文法", (None, "grammar", None, None)),
+        ("n1", ("N1", "all", None, None)),
+        ("文法排序", (None, "grammar", "grammar_order", None)),
+        ("  文法排序\tn1  ", ("N1", "grammar", "grammar_order", None)),
+        ("GRAMMAR_ORDER N1", ("N1", "grammar", "grammar_order", None)),
+        ("综合 n5", ("N5", "all", None, None)),
+        ("n1 N1 文法 文法排序 文法排序", ("N1", "grammar", "grammar_order", None)),
+        ("AI", (None, "all", None, True)),
+        ("ai生成 n1", ("N1", "all", None, True)),
+        ("文法 非AI生成", (None, "grammar", None, False)),
+        ("非ai 文法排序 N1", ("N1", "grammar", "grammar_order", False)),
+        ("noai n5", ("N5", "all", None, False)),
+        ("ai AI生成 n1", ("N1", "all", None, True)),
     ],
 )
 def test_optional_filters(text, expected):
@@ -23,8 +29,8 @@ def test_optional_filters(text, expected):
 
 
 def test_filter_order_does_not_change_selection():
-    for tokens in permutations(["文法排序", "n1", "文法"]):
-        assert parse_filters(" ".join(tokens)) == ("N1", "grammar", "grammar_order")
+    for tokens in permutations(["文法排序", "n1", "文法", "非AI"]):
+        assert parse_filters(" ".join(tokens)) == ("N1", "grammar", "grammar_order", False)
 
 
 @pytest.mark.parametrize(
@@ -36,6 +42,8 @@ def test_filter_order_does_not_change_selection():
         ("文法选择", "文法排序"),
         ("N6",),
         ("文法排序", "n1", "未知条件"),
+        ("AI", "非AI"),
+        ("ai生成", "noai", "n1"),
     ],
 )
 def test_invalid_filters_are_rejected_regardless_of_order(tokens):

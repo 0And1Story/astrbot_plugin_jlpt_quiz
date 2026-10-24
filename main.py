@@ -100,6 +100,8 @@ class JLPTQuizPlugin(Star):
             "/n1综合：综合抽题；/jlpt题型：查看具体题型\n"
             "/jlpt抽题 文法：所有等级的文法题\n"
             "/jlpt 文法排序 n1：N1 文法排序题\n"
+            "/jlpt抽题 n1 AI 或 /jlpt抽题 n1 非AI：筛选 AI 生成标记\n"
+            "AI 生成默认关闭，需在配置中启用；非AI表示未标记 AI 生成，不保证人工编写。\n"
             "筛选条件用空格分隔、顺序不限，省略的条件不限制；/jlpt 无参数显示帮助。\n"
             "直接发送 1–4 或 A–D，无需 @机器人。\n"
             "群聊首个有效答案立即结算，答错也公布答案。\n"
@@ -115,8 +117,9 @@ class JLPTQuizPlugin(Star):
         if not self.bank:
             await self.send_text(event, "题库未就绪，请管理员检查日志或运行 scripts/prepare_data.py。")
             return
-        counts = self.bank.counts()
-        lines = ["JLPT 题库（练习题）"]
+        enabled = self.config.get("enable_ai_generated", False)
+        counts = self.bank.counts(ai_generated=None if enabled else False)
+        lines = [f"JLPT 当前可抽取题库（AI 生成题目{'已启用' if enabled else '已关闭'}）"]
         for n in range(1, 6):
             lines.append(
                 f"N{n}：" + " / ".join(f"{name} {counts[(f'N{n}', category)]}" for category, name in CATEGORIES.items())
@@ -127,15 +130,20 @@ class JLPTQuizPlugin(Star):
     async def type_info(self, event: AstrMessageEvent):
         """查看细分题型与已加载题数。"""
         event.stop_event()
-        lines = ["使用 /jlpt抽题 题型名，可加 N1–N5 筛选等级，参数顺序不限。题量为当前已加载总数："]
+        enabled = self.config.get("enable_ai_generated", False)
+        lines = ["使用 /jlpt抽题 题型名，可加 N1–N5、AI 或非AI，参数顺序不限。题量为当前可抽取总数："]
         for key, (_, name) in TYPES.items():
-            count = sum(q.question_type == key for q in self.bank.questions) if self.bank else 0
+            count = (
+                sum(q.question_type == key and (enabled or not q.ai_generated) for q in self.bank.questions)
+                if self.bank
+                else 0
+            )
             lines.append(f"{name}：{count}")
         await self.send_text(event, "\n".join(lines))
 
     @filter.command("jlpt抽题")
     async def draw_type(self, event: AstrMessageEvent):
-        """按等级、大类、具体题型抽题；空格分隔，顺序不限，均可省略。"""
+        """按等级、大类、具体题型、AI 标记抽题；空格分隔，顺序不限。"""
         await self.draw_filtered(event, self.command_arguments(event))
 
     @filter.command("jlpt")
@@ -162,13 +170,25 @@ class JLPTQuizPlugin(Star):
             return
         await self.start(event, *selected)
 
-    async def start(self, event: AstrMessageEvent, level: str | None, category: str, question_type: str | None = None):
+    async def start(
+        self,
+        event: AstrMessageEvent,
+        level: str | None,
+        category: str,
+        question_type: str | None = None,
+        ai_generated: bool | None = None,
+    ):
         event.stop_event()
         if self.closing or str(event.get_sender_id()) == str(event.get_self_id()):
             return
         if not self.bank:
             await self.send_text(event, "题库未就绪，请管理员检查日志或运行 scripts/prepare_data.py。")
             return
+        if not self.config.get("enable_ai_generated", False):
+            if ai_generated is True:
+                await self.send_text(event, "AI 生成题目已关闭，请先在插件配置中开启「启用 AI 生成题目」。")
+                return
+            ai_generated = False
         key = session_key(event)
         if key in self.sessions.rounds:
             await self.send_text(event, "本会话已有题目，请先作答，或由出题者发送 /jlpt结束。")
@@ -180,12 +200,23 @@ class JLPTQuizPlugin(Star):
             self.integer("recent_questions", 20, 0, 200),
             bool(self.config.get("shuffle_options", True)),
             question_type,
+            ai_generated,
         )
         if not question:
             await self.send_text(
                 event,
                 f"题库暂时没有 {level or '所有等级'} "
                 f"{TYPES[question_type][1] if question_type else CATEGORIES.get(category, '综合')}题。"
+                + (
+                    f"当前筛选：{'仅 AI 生成' if ai_generated else '未标记 AI 生成'}。"
+                    if ai_generated is not None
+                    else ""
+                )
+                + (
+                    "可检查插件配置中的「启用 AI 生成题目」。"
+                    if not self.config.get("enable_ai_generated", False)
+                    else ""
+                )
                 + ("请导入带逐题音频的自定义题库。" if category == "listening" else ""),
             )
             return

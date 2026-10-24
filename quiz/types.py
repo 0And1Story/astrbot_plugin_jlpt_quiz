@@ -30,6 +30,7 @@ DEFAULT_TYPES = {
     "reading": "reading_short",
     "listening": "listening_task",
 }
+AI_FILTERS = {"ai": True, "ai生成": True, "非ai": False, "非ai生成": False, "noai": False}
 
 
 def resolve_type(value: str) -> tuple[str, str | None] | None:
@@ -45,12 +46,19 @@ def resolve_type(value: str) -> tuple[str, str | None] | None:
     return None
 
 
-def parse_filters(text: str) -> tuple[str | None, str, str | None]:
-    """Combine optional level, category and subtype filters in any order."""
+def parse_filters(text: str) -> tuple[str | None, str, str | None, bool | None]:
+    """Combine optional level, category, subtype and AI filters in any order."""
     level = None
     category = "all"
     question_type = None
+    ai_generated = None
     for token in text.split():
+        if token.lower() in AI_FILTERS:
+            selected_ai = AI_FILTERS[token.lower()]
+            if ai_generated is not None and ai_generated != selected_ai:
+                raise ValueError("AI 筛选条件冲突，请只指定 AI 或非AI。")
+            ai_generated = selected_ai
+            continue
         normalized = token.upper()
         if normalized in {"N1", "N2", "N3", "N4", "N5"}:
             if level is not None and level != normalized:
@@ -69,4 +77,4 @@ def parse_filters(text: str) -> tuple[str | None, str, str | None]:
             raise ValueError("一次只能指定一个具体题型。")
         category = selected_category
         question_type = selected_type or question_type
-    return level, category, question_type
+    return level, category, question_type, ai_generated

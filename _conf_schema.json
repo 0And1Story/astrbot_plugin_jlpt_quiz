@@ -1,4 +1,10 @@
 {
+  "enable_ai_generated": {
+    "description": "启用 AI 生成题目",
+    "type": "bool",
+    "default": false,
+    "hint": "默认关闭，所有抽题命令均排除 ai_generated: true 的题目；命令中的 AI 筛选不能绕过此开关。关闭后仍包含生成方式未披露或仅有 AI 审核的题目，不代表人工题库。"
+  },
   "group_vocabulary_timeout_seconds": {
     "description": "群聊词汇题超时（秒）",
     "type": "int",

@@ -77,6 +77,8 @@ class Question:
         answer = row.get("answer")
         if type(answer) is not int or not 0 <= answer < len(options):
             raise ValueError("answer 必须为选项范围内的整数（从 0 开始）")
+        if "ai_generated" in row and type(row["ai_generated"]) is not bool:
+            raise ValueError("ai_generated 必须为布尔值")
         for name in (
             "passage",
             "audio",
@@ -181,6 +183,7 @@ class QuestionBank:
         recent_count: int = 20,
         shuffle: bool = True,
         question_type: str | None = None,
+        ai_generated: bool | None = None,
     ) -> Question | None:
         if level is not None and category != "all":
             pool = self.pools.get((level, category), [])
@@ -192,9 +195,11 @@ class QuestionBank:
             ]
         if question_type:
             pool = [q for q in pool if q.question_type == question_type]
+        if ai_generated is not None:
+            pool = [q for q in pool if q.ai_generated == ai_generated]
         if not pool:
             return None
-        key = (*session_key, level, category, question_type)
+        key = (*session_key, level, category, question_type, ai_generated)
         recent = self.recent.pop(key, [])
         # Small pools still rotate through all available questions.
         recent = recent[-min(max(0, recent_count), max(0, len(pool) - 1)) :] if recent_count and len(pool) > 1 else []
@@ -205,5 +210,7 @@ class QuestionBank:
             self.recent.popitem(last=False)
         return question.shuffled(random) if shuffle else question
 
-    def counts(self) -> Counter:
-        return Counter((q.level, q.category) for q in self.questions)
+    def counts(self, ai_generated: bool | None = None) -> Counter:
+        return Counter(
+            (q.level, q.category) for q in self.questions if ai_generated is None or q.ai_generated == ai_generated
+        )

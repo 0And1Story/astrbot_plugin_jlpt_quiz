@@ -165,7 +165,7 @@ class Context:
 class PluginTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.context = Context()
-        self.bot = plugin.JLPTQuizPlugin(self.context, {"shuffle_options": False})
+        self.bot = plugin.JLPTQuizPlugin(self.context, {"shuffle_options": False, "enable_ai_generated": True})
         self.bot.bank = plugin.QuestionBank(list(TEST_QUESTIONS))
 
     async def asyncTearDown(self):
@@ -212,10 +212,10 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
 
         self.bot.start = AsyncMock()
         for command, expected in (
-            ("/jlpt抽题 文法", (None, "grammar", None)),
-            ("/jlpt抽题 n5", ("N5", "all", None)),
-            ("/jlpt抽题", (None, "all", None)),
-            ("/jlpt 词汇填空", (None, "vocabulary", "vocab_context")),
+            ("/jlpt抽题 文法", (None, "grammar", None, None)),
+            ("/jlpt抽题 n5", ("N5", "all", None, None)),
+            ("/jlpt抽题", (None, "all", None, None)),
+            ("/jlpt 词汇填空", (None, "vocabulary", "vocab_context", None)),
         ):
             event = Event(message=command)
             handler = self.bot.draw_type if "抽题" in command else self.bot.jlpt
@@ -230,6 +230,117 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
             self.assertIn("用法：", event.messages[-1].text)
             self.assertTrue(event.stopped)
         self.assertFalse(self.bot.sessions.rounds)
+
+    def use_ai_test_bank(self):
+        from dataclasses import replace
+
+        original = next(q for q in TEST_QUESTIONS if q.category == "grammar")
+        self.bot.bank = plugin.QuestionBank(
+            [
+                replace(original, id="ai", level="N1", question_type="grammar_fill", ai_generated=True),
+                replace(
+                    original,
+                    id="unknown",
+                    level="N1",
+                    question_type="grammar_fill",
+                    ai_generated=False,
+                    provenance="是否由 AI 生成未披露",
+                ),
+                replace(
+                    original,
+                    id="reviewed",
+                    level="N1",
+                    question_type="grammar_fill",
+                    ai_generated=False,
+                    provenance="含 Claude AI 审核",
+                ),
+            ]
+        )
+
+    async def test_ai_questions_are_disabled_by_default_for_shortcuts_and_generic_draws(self):
+        self.use_ai_test_bank()
+        self.bot.config.pop("enable_ai_generated")
+        for index, (handler, command) in enumerate(
+            (
+                (self.bot.n1_grammar, "n1wf"),
+                (self.bot.n1_all, "n1综合"),
+                (self.bot.draw_type, "jlpt抽题 文法"),
+                (self.bot.jlpt, "jlpt 文法选择 n1"),
+            )
+        ):
+            event = Event(group=f"disabled-{index}", message=command)
+            await handler(event)
+            round_ = self.bot.sessions.active(plugin.session_key(event))
+            self.assertIsNotNone(round_)
+            self.assertFalse(round_.question.ai_generated)
+
+    async def test_ai_selector_cannot_override_the_disabled_setting(self):
+        self.use_ai_test_bank()
+        self.bot.config["enable_ai_generated"] = False
+        for handler, command in (
+            (self.bot.draw_type, "jlpt抽题 AI 文法 n1"),
+            (self.bot.jlpt, "jlpt n1 ai"),
+        ):
+            event = Event(message=command)
+            await handler(event)
+            self.assertIn("AI 生成题目已关闭", event.messages[-1].text)
+            self.assertTrue(event.stopped)
+        self.assertFalse(self.bot.sessions.rounds)
+        self.assertFalse(self.bot.tasks)
+
+    async def test_ai_and_non_ai_selectors_work_in_both_command_forms(self):
+        self.use_ai_test_bank()
+        cases = (
+            ("jlpt抽题 AI n1 文法选择", True),
+            ("jlpt n1 文法选择 ai生成", True),
+            ("jlpt抽题 非AI n1 文法", False),
+            ("jlpt 文法选择 非ai生成 n1", False),
+        )
+        for index, (command, expected) in enumerate(cases):
+            event = Event(group=f"selector-{index}", message=command)
+            handler = self.bot.draw_type if "抽题" in command else self.bot.jlpt
+            await handler(event)
+            question = self.bot.sessions.active(plugin.session_key(event)).question
+            self.assertEqual(question.ai_generated, expected)
+            self.assertEqual((question.level, question.question_type), ("N1", "grammar_fill"))
+
+    async def test_conflicting_ai_selectors_do_not_start_a_round(self):
+        event = Event(message="jlpt抽题 文法 AI 非AI")
+        await self.bot.draw_type(event)
+        self.assertIn("AI 筛选条件冲突", event.messages[-1].text)
+        self.assertFalse(self.bot.sessions.rounds)
+
+    async def test_ai_setting_changes_affect_subsequent_draws_without_reloading(self):
+        self.use_ai_test_bank()
+        for index, enabled in enumerate((False, True, False)):
+            self.bot.config["enable_ai_generated"] = enabled
+            event = Event(group=f"toggle-{index}")
+            await self.bot.start(event, "N1", "grammar", ai_generated=True if enabled else None)
+            question = self.bot.sessions.active(plugin.session_key(event)).question
+            self.assertEqual(question.ai_generated, enabled)
+
+    async def test_ai_setting_controls_bank_and_subtype_counts(self):
+        self.use_ai_test_bank()
+        for enabled, expected in ((False, 2), (True, 3)):
+            self.bot.config["enable_ai_generated"] = enabled
+            bank = Event()
+            await self.bot.bank_info(bank)
+            self.assertIn(f"文法 {expected}", bank.messages[0].text)
+            self.assertIn("已启用" if enabled else "已关闭", bank.messages[0].text)
+            types = Event()
+            await self.bot.type_info(types)
+            self.assertIn(f"文法选择：{expected}", types.messages[0].text)
+
+    async def test_empty_pool_after_excluding_ai_explains_the_setting(self):
+        self.use_ai_test_bank()
+        self.bot.bank = plugin.QuestionBank([self.bot.bank.questions[0]])
+        self.bot.config["enable_ai_generated"] = False
+        event = Event()
+        await self.bot.start(event, "N1", "grammar")
+        self.assertIn("未标记 AI 生成", event.messages[-1].text)
+        self.assertIn("启用 AI 生成题目", event.messages[-1].text)
+        self.assertFalse(self.bot.sessions.rounds)
+        self.assertFalse(self.bot.tasks)
 
     async def test_removed_answer_command_does_not_intercept_another_plugin(self):
         await self.bot.start(Event(), "N5", "grammar")

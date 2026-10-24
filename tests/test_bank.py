@@ -66,6 +66,9 @@ def test_answer_parser(text, expected):
         {"category": "reading"},
         {"audio": "file:///etc/passwd"},
         {"provenance": None},
+        {"ai_generated": "true"},
+        {"ai_generated": 1},
+        {"ai_generated": None},
     ],
 )
 def test_invalid_question_rejected(tmp_path, changes):
@@ -135,6 +138,39 @@ def test_filters_cover_all_levels_and_rotate_only_matching_questions(tmp_path, l
     bank = QuestionBank(questions)
     drawn = {bank.draw(level, category, ("group", "1"), question_type=subtype).id for _ in expected}
     assert drawn == expected
+
+
+@pytest.mark.parametrize(
+    "level,category,subtype,ai_generated,expected",
+    [
+        (None, "all", None, None, {"ai-order", "unknown-order", "reviewed-fill", "ai-vocab"}),
+        (None, "all", None, True, {"ai-order", "ai-vocab"}),
+        (None, "all", None, False, {"unknown-order", "reviewed-fill"}),
+        ("N1", "grammar", "grammar_order", True, {"ai-order"}),
+        ("N1", "grammar", "grammar_order", False, {"unknown-order"}),
+        ("N1", "grammar", "grammar_order", None, {"ai-order", "unknown-order"}),
+    ],
+)
+def test_ai_filter_combines_with_other_filters_and_rotates_matching_pool(
+    tmp_path, level, category, subtype, ai_generated, expected
+):
+    rows = [
+        row(id="ai-order", level="N1", question_type="grammar_order", ai_generated=True),
+        row(id="unknown-order", level="N1", question_type="grammar_order"),
+        row(id="reviewed-fill", provenance="含 Claude AI 审核", ai_generated=False),
+        row(id="ai-vocab", level="N1", category="vocabulary", ai_generated=True),
+    ]
+    bank = QuestionBank([Question.from_dict(r, tmp_path) for r in rows])
+    for _ in range(2):
+        drawn = {
+            bank.draw(level, category, ("group", "1"), question_type=subtype, ai_generated=ai_generated).id
+            for _ in expected
+        }
+        assert drawn == expected
+    assert bank.counts(True)[("N1", "grammar")] == 1
+    assert bank.counts(False)[("N1", "grammar")] == 1
+    assert sum(bank.counts(False).values()) == 2
+    assert bank.draw("N5", "grammar", (), ai_generated=True) is None
 
 
 def test_reading_can_use_images_without_text(tmp_path):
